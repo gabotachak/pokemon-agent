@@ -1,0 +1,132 @@
+# =========================
+# Operating System Files
+# =========================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# uv / packaging
+.uv/
+uv.lock
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# =========================
+# Node.js
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# =========================
+# Machine Learning / Data
+# =========================
+# Ignoramos grandes archivos de datos y modelos
+*.parquet
+*.csv
+*.tsv
+*.h5
+*.model
+
+# Carpetas específicas del proyecto
+data/raw/
+data/processed/
+
+# Outputs del proyecto
+outputs/figures/
+outputs/models/
+# Si quieres trackear algún JSON específico pero ignorar el resto:
+# !outputs/metrics.json
+# !outputs/models/training_log.json
+
+# =========================
+# IDEs and Editors
+# =========================
+.idea/
+.vscode/
+*.swp
+*.swo
+.project
+.settings/
+.classpath
+
+# =========================
+# Project Specific
+# =========================
+# Servidor Showdown clonado dinámicamente
+showdown/

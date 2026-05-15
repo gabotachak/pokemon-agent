@@ -1,0 +1,21 @@
+[project]
+name = "pokemon-agent"
+version = "0.1.0"
+description = "Add your description here"
+requires-python = ">=3.13"
+dependencies = [
+    "datasets>=4.8.5",
+    "fastapi>=0.136.1",
+    "huggingface-hub>=1.14.0",
+    "matplotlib>=3.10.9",
+    "numpy>=2.4.4",
+    "pandas>=3.0.3",
+    "poke-env>=0.15.0",
+    "pyarrow>=24.0.0",
+    "requests>=2.34.2",
+    "scikit-learn>=1.8.0",
+    "seaborn>=0.13.2",
+    "uvicorn>=0.47.0",
+    "websockets>=16.0",
+    "xgboost>=3.2.0",
+]

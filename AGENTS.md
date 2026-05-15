@@ -52,10 +52,11 @@ Para ver el dashboard: abrir `http://localhost:9000` en el browser.
 
 ## Datasets
 
-### Principal — PokeChamp (HuggingFace)
-- **URL:** https://huggingface.co/datasets/milkkarten/pokechamp
-- **Tamaño:** ~2M batallas reales de Pokémon Showdown
-- **Filtro a aplicar:** solo formato `gen1randombattle`
+### Principal — Pokémon Showdown Replays (HuggingFace)
+- **URL:** https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays
+- **Tamaño:** 31.7M batallas totales, **107,585 gen1randombattle** de jugadores humanos reales
+- **Filtro a aplicar:** `formatid == 'gen1randombattle'` al descargar — no bajar el dataset completo (66.8 GB)
+- **Schema:** `id`, `format`, `players`, `log`, `uploadtime`, `views`, `formatid`, `rating`
 - **Uso:** clustering (técnica 1) y clasificación (técnica 2)
 
 ### Secundario — Pokémon Stats (PokeAPI)
@@ -144,21 +145,20 @@ project/
 
 ### 1. Descarga de datos (`src/01_download.py`)
 
-- Descargar PokeChamp con `huggingface_hub.snapshot_download`
-  → `data/raw/pokechamp/`
+- Descargar solo las filas `gen1randombattle` de HolidayOugi/pokemon-showdown-replays
+  usando `datasets` con filtro — NO `snapshot_download` (evita bajar 66 GB)
+  → `data/raw/gen1rb.parquet`
 - Descargar pokemon_stats.csv con requests
   → `data/raw/pokemon_stats.csv`
-- Imprimir: número de archivos descargados, tamaño en disco, primeras filas
+- Imprimir: número de batallas descargadas, tamaño en disco, primeras filas
 
 ---
 
 ### 2. Preprocesamiento (`src/02_preprocess.py`)
 
 **Cargar y filtrar:**
-- Cargar batallas de PokeChamp
-- Filtrar solo `gen1randombattle`
-- Si el dataset filtrado supera 500,000 filas, tomar muestra aleatoria
-  de 500,000 con `random_state=42` e imprimir aviso
+- Cargar `data/raw/gen1rb.parquet` — ya filtrado a gen1randombattle (~107k batallas)
+- No se requiere filtro adicional por formato
 
 **Extraer por batalla:**
 - `team_p1`, `team_p2`: lista de hasta 6 Pokémon por equipo
@@ -392,6 +392,14 @@ poblar figuras con valores reales.
 
 Markdown con estructura IEEE doble columna simulada. Poblar con valores
 reales de `outputs/metrics.json`. Placeholder `[VALOR]` donde falten datos.
+
+**Límite estricto: máximo 6 páginas IEEE doble columna.** Ser conciso — cada
+sección debe caber en el espacio asignado. Priorizar figuras sobre texto.
+
+**Justificar conexión RL-dataset:** mencionar explícitamente en la sección de
+metodología que el diseño del MDP (variables de estado, reward shaping) se
+derivó del análisis previo del dataset PokeChamp (features discriminantes del
+clasificador, arquetipos del clustering).
 
 **Secciones:**
 

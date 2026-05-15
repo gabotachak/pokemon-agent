@@ -14,8 +14,9 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-189DEE?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
-[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/datasets/milkkarten/pokechamp)
+[![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Entrega](https://img.shields.io/badge/Entrega-2_Jun_2026-red?style=for-the-badge&logo=googlecalendar&logoColor=white)]()
 
 </div>
 
@@ -152,7 +153,7 @@ uv run python src/07_report_figures.py
 | Categoría | Tecnología |
 |-----------|-----------|
 | Entorno de combate | [`poke-env`](https://github.com/hsahovic/poke-env) + Pokémon Showdown |
-| Dataset | [PokeChamp (HuggingFace)](https://huggingface.co/datasets/milkkarten/pokechamp) — ~2M batallas |
+| Dataset | [Pokémon Showdown Replays (HuggingFace)](https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays) — 107k batallas gen1 reales |
 | ML | scikit-learn, XGBoost, NumPy, pandas |
 | Dashboard | FastAPI + Chart.js |
 | Gestión de deps | `uv` |
