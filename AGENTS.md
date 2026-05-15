@@ -65,6 +65,20 @@ Para ver el dashboard: abrir `http://localhost:9000` en el browser.
 
 ---
 
+## Estilo de desarrollo
+
+Todo script de larga duración debe mostrar progreso claro: barras `tqdm` para loops, output streameado (no silenciado) para subprocesos lentos (git, npm, uv), checkmarks `✓` al completar cada paso, y banners de sección con `─` separadores. Nunca dejar al usuario mirando una terminal en silencio.
+
+## Variables de entorno
+
+Copiar `.env.example` a `.env` y completar:
+
+```
+HF_TOKEN=hf_...   # https://huggingface.co/settings/tokens (Read role)
+```
+
+`.env` está en `.gitignore`. Todos los scripts lo cargan con `python-dotenv`.
+
 ## Stack tecnológico
 
 - Python 3.11+

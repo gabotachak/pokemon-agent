@@ -38,6 +38,20 @@ uv run python src/07_report_figures.py
 
 Dependency management: `uv` only — no pip, no poetry.
 
+## Estilo de desarrollo
+
+Todo script de larga duración debe mostrar progreso claro: barras `tqdm` para loops, output streameado (no silenciado) para subprocesos lentos (git, npm, uv), checkmarks `✓` al completar cada paso, y banners de sección con `─` separadores. Nunca dejar al usuario mirando una terminal en silencio.
+
+## Environment variables
+
+Copy `.env.example` to `.env` and fill in:
+
+```
+HF_TOKEN=hf_...   # https://huggingface.co/settings/tokens (Read role)
+```
+
+`.env` is gitignored. All scripts load it automatically via `python-dotenv`.
+
 ## Architecture
 
 Scripts run sequentially; each assumes the previous step completed.
