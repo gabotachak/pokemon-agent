@@ -1,0 +1,73 @@
+import asyncio
+from tabulate import tabulate
+from utils import ask_agents, ask_int, discover_agents, ask_yes_no, print_title
+
+
+async def cross_evaluate_manual(players, n_challenges=10):
+    results = {p.username: {} for p in players}
+    total = (len(players) * (len(players) - 1)) // 2
+    current = 0
+    for i in range(len(players)):
+        for j in range(i + 1, len(players)):
+            p1 = players[i]
+            p2 = players[j]
+            current += 1
+
+            p1.reset_battles()
+            p2.reset_battles()
+            label = f"{p1.username} vs {p2.username}"
+
+            print(f"  [{current}/{total}] " f"{label} " f"({n_challenges} battles)...")
+            await p1.battle_against(
+                p2,
+                n_battles=n_challenges,
+            )
+            results[p1.username][p2.username] = p1.win_rate
+            results[p2.username][p1.username] = p2.win_rate
+
+    return results
+
+
+def print_results(results: dict) -> None:
+    print_title("Resultados")
+
+    for agent, matchups in results.items():
+        print(f"\n  {agent}")
+
+        for opponent, winrate in matchups.items():
+            percent = winrate * 100
+
+            print(f"    ├─ vs {opponent:<25}" f"{percent:>6.1f}% WR")
+
+
+async def main():
+    print_title("🔬 Cross-Evaluate de Agentes")
+
+    # Agent selection
+    agents = discover_agents(exclude={"cross_evaluate.py"})
+    selected = ask_agents(agents)
+
+    # Configuration
+    n_battles = ask_int("Batallas por matchup", 10)
+
+    # Loop
+    players = []
+    for i, agent_cls in enumerate(selected):
+        username = f"{agent_cls.__name__} {i + 1}"
+        try:
+            player = agent_cls(
+                username=username,
+                max_concurrent_battles=1,
+            )
+        except TypeError:
+            player = agent_cls(max_concurrent_battles=0)
+            if hasattr(player, "_username"):
+                player._username = username
+        players.append(player)
+
+    results = await cross_evaluate_manual(players, n_challenges=n_battles)
+    print_results(results)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
