@@ -1,3 +1,19 @@
+"""
+search_battles.py — Buscar oponentes en el ladder automáticamente.
+
+Permite elegir un agente, seleccionar servidor (local u oficial),
+y buscar ``N`` partidas contra oponentes aleatorios del ladder.
+A diferencia de ``accept_battles``, este script inicia la búsqueda
+en lugar de esperar challenges entrantes.
+
+Uso:
+    # Terminal A — servidor Showdown (si usas localhost)
+    cd showdown && node pokemon-showdown start --no-security
+
+    # Terminal B — este script
+    python cli/search_battles.py
+"""
+
 import asyncio
 from poke_env import (
     LocalhostServerConfiguration,

@@ -1,6 +1,22 @@
+"""
+cross_evaluate.py — Evaluar agentes en round-robin local.
+
+Permite seleccionar múltiples agentes y enfrentarlos entre sí en
+partidas locales (servidor localhost). Cada par de agentes se enfrenta
+``N`` veces y se calcula el win rate de cada uno contra el otro.
+
+El resultado muestra el porcentaje de victorias de cada agente contra cada oponente.
+
+Uso:
+    # Terminal A — servidor Showdown
+    cd showdown && node pokemon-showdown start --no-security
+
+    # Terminal B — este script
+    python cli/accept_battles.py
+"""
+
 import asyncio
-from tabulate import tabulate
-from utils import ask_agents, ask_int, discover_agents, ask_yes_no, print_title
+from utils import ask_agents, ask_int, discover_agents, print_title
 
 
 async def cross_evaluate_manual(players, n_challenges=10):

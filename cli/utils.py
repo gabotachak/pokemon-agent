@@ -1,5 +1,13 @@
 """
-utils.py — Funciones compartidas para scripts de ejemplos.
+utils.py — Funciones compartidas para los scripts de la carpeta cli/.
+
+Provee utilidades de descubrimiento de agentes, interacción con el usuario
+(índices, confirmaciones) y un battle logger genérico que intercepta
+``choose_move`` y ``_battle_finished_callback`` para imprimir en consola
+cuándo inicia y termina cada batalla.
+
+Uso típico:
+    from utils import discover_agents, ask_int, make_battle_logger
 """
 
 import importlib.util
@@ -22,17 +30,26 @@ DEFAULT_EXCLUDE = frozenset(
 )
 
 
-def print_title(title):
+def print_title(title: str) -> None:
+    """Imprime un banner centrado con bordes decorativos."""
     print(f"\n{'═' * 50}")
     print(f"  {title}")
     print(f"{'═' * 50}")
 
 
 def discover_agents(exclude: set[str] | None = None) -> dict[str, type]:
-    """Escanea examples/ y devuelve {nombre_clase: clase}.
+    """Escanea ``examples/`` y devuelve ``{nombre_clase: clase}``.
+
+    Busca clases que hereden de ``Player`` o ``RandomPlayer`` en cada
+    archivo ``.py`` del directorio de ejemplos, excluyendo archivos
+    de infraestructura.
 
     Args:
-        exclude: nombres de archivo a ignorar. Si None, usa los defaults.
+        exclude: nombres de archivo a ignorar. Si ``None``, usa los defaults.
+
+    Returns:
+        Diccionario mapeando nombre de clase a la clase misma.
+        Siempre incluye ``RandomPlayer`` como opción base.
     """
     agents: dict[str, type] = {"RandomPlayer": RandomPlayer}
     skip = exclude if exclude is not None else DEFAULT_EXCLUDE
@@ -60,7 +77,12 @@ def discover_agents(exclude: set[str] | None = None) -> dict[str, type]:
 
 
 def print_agents(agents: dict[str, type], bordered: bool = False) -> None:
-    """Imprime la lista de agentes disponibles con índice."""
+    """Imprime la lista de agentes disponibles con índice numérico.
+
+    Args:
+        agents: diccionario ``{nombre: clase}`` devuelto por ``discover_agents``.
+        bordered: si ``True``, rodea la lista con líneas decorativas.
+    """
     if bordered:
         print(f"\n  {'─' * 50}")
         print(f"  Agentes disponibles:")
@@ -79,7 +101,15 @@ def print_agents(agents: dict[str, type], bordered: bool = False) -> None:
 
 
 def ask_agents(agents: dict[str, type]) -> list[type]:
-    """Pide al usuario qué agentes incluir (índices separados por coma)."""
+    """Pide al usuario qué agentes incluir (índices separados por coma).
+
+    Args:
+        agents: diccionario ``{nombre: clase}`` devuelto por ``discover_agents``.
+
+    Returns:
+        Lista de clases seleccionadas. Si no se ingresa nada válido,
+        retorna ``[RandomPlayer]``.
+    """
     print_agents(agents, bordered=True)
 
     try:
@@ -109,7 +139,15 @@ def ask_agents(agents: dict[str, type]) -> list[type]:
     return selected
 
 
-def ask_agent(agents: dict[str, type]) -> type:
+def ask_agent(agents: dict[str, type]) -> int:
+    """Pide al usuario que elija un solo agente.
+
+    Args:
+        agents: diccionario ``{nombre: clase}`` devuelto por ``discover_agents``.
+
+    Returns:
+        Índice numérico del agente seleccionado en la lista de claves.
+    """
     print_agents(agents, bordered=True)
     try:
         idx = int(input(f"  Elegí agente [0]: ").strip() or "0")
@@ -120,7 +158,15 @@ def ask_agent(agents: dict[str, type]) -> type:
 
 
 def ask_int(prompt: str, default: int) -> int:
-    """Pide un entero al usuario, usa default si vacío o inválido."""
+    """Pide un entero al usuario, usa ``default`` si vacío o inválido.
+
+    Args:
+        prompt: texto a mostrar antes del input.
+        default: valor por defecto si el usuario no ingresa nada.
+
+    Returns:
+        El entero ingresado o el valor por defecto.
+    """
     try:
         val = input(f"  {prompt} [{default}]: ").strip()
         return int(val) if val else default
@@ -129,6 +175,18 @@ def ask_int(prompt: str, default: int) -> int:
 
 
 def ask_yes_no(prompt: str, default: str = "y") -> bool:
+    """Pide confirmación sí/no al usuario.
+
+    Args:
+        prompt: texto a mostrar.
+        default: ``'y'`` o ``'n'`` para el valor por defecto.
+
+    Returns:
+        ``True`` si el usuario responde afirmativamente, ``False`` en caso contrario.
+
+    Raises:
+        ValueError: si ``default`` no es ``'y'`` o ``'n'``.
+    """
     default = default.lower()
     if default not in ("y", "n"):
         raise ValueError("default debe ser 'y' o 'n'")
@@ -146,7 +204,19 @@ def ask_yes_no(prompt: str, default: str = "y") -> bool:
         print("Por favor responda con 'y' o 'n'.")
 
 
-def make_battle_logger(target):
+def make_battle_logger(target: type) -> type:
+    """Inyecta logging de inicio/fin de batalla en una clase de agente.
+
+    Intercepta ``choose_move`` y ``_battle_finished_callback`` mediante
+    monkey-patching para asignar un ID local a cada batalla y mostrar
+    en consola cuándo inicia y termina, junto con el resultado.
+
+    Args:
+        target: la clase de agente (subclase de ``Player``) a modificar.
+
+    Returns:
+        La misma clase con los métodos interceptados.
+    """
     original_choose_move = target.choose_move
     original_battle_finished = target._battle_finished_callback
 

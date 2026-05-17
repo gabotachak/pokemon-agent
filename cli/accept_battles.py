@@ -1,3 +1,18 @@
+"""
+accept_battles.py — Aceptar challenges de otros jugadores.
+
+Permite elegir un agente, seleccionar servidor (local u oficial),
+y aceptar una cantidad definida de challenges entrantes.
+Ideal para probar agentes contra humanos u otros bots.
+
+Uso:
+    # Terminal A — servidor Showdown (si usas localhost)
+    cd showdown && node pokemon-showdown start --no-security
+
+    # Terminal B — este script
+    python cli/accept_battles.py
+"""
+
 import asyncio
 from poke_env import (
     LocalhostServerConfiguration,
