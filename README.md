@@ -30,7 +30,7 @@ El proyecto combina tres técnicas de ML sobre ~2 millones de batallas reales:
 
 | # | Técnica | Qué hace |
 |---|---------|----------|
-| 1 | **Clustering** (K-Means) | Descubre arquetipos de equipo en Gen 1 |
+| 1 | **Clustering** (K-Means) | Descubre arquetipos de equipo en Gen 8 |
 | 2 | **Clasificación** (XGBoost) | Predice la acción ganadora dado el estado del combate |
 | 3 | **Refuerzo** (Q-Learning) | Agente que juega con equipo de 6 Pokémon |
 
@@ -63,8 +63,8 @@ El proyecto combina tres técnicas de ML sobre ~2 millones de batallas reales:
 
 ```mermaid
 flowchart TD
-    DS[("`**PokeChamp**
-    ~2M batallas Gen 1`")] --> PP
+    DS[("`**HolidayOugi**
+    batallas Gen 8`")] --> PP
 
     PP["📦 Preprocesamiento
     battles_featured.parquet"]
@@ -153,7 +153,7 @@ uv run python src/07_report_figures.py
 | Categoría | Tecnología |
 |-----------|-----------|
 | Entorno de combate | [`poke-env`](https://github.com/hsahovic/poke-env) + Pokémon Showdown |
-| Dataset | [Pokémon Showdown Replays (HuggingFace)](https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays) — 107k batallas gen1 reales |
+| Dataset | [Pokémon Showdown Replays (HuggingFace)](https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays) — batallas gen8 reales |
 | ML | scikit-learn, XGBoost, NumPy, pandas |
 | Dashboard | FastAPI + Chart.js |
 | Gestión de deps | `uv` |

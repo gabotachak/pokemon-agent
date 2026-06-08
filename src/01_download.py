@@ -1,12 +1,9 @@
-import itertools
-import threading
-import time
 import requests
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 from pathlib import Path
-from datasets import load_dataset
+from huggingface_hub import hf_hub_download
 from dotenv import load_dotenv
 from tqdm import tqdm
 
@@ -16,96 +13,39 @@ ROOT = Path(__file__).parent.parent
 RAW = ROOT / "data" / "raw"
 
 REPLAYS_REPO = "HolidayOugi/pokemon-showdown-replays"
-FORMAT_FILTER = "gen1randombattle"
+GEN8_RB_FILES = [
+    "[Gen 8] RANDOMBATTLE_part1.parquet",
+    "[Gen 8] RANDOMBATTLE_part2.parquet",
+    "[Gen 8] RANDOMBATTLE_part3.parquet",
+]
 STATS_URL = "https://raw.githubusercontent.com/PokeAPI/pokeapi/master/data/v2/csv/pokemon_stats.csv"
 
 
-class Spinner:
-    """Spinner animado para operaciones bloqueantes sin progreso medible."""
-
-    FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"]
-
-    def __init__(self, msg: str) -> None:
-        self.msg = msg
-        self._stop = threading.Event()
-        self._thread = threading.Thread(target=self._spin, daemon=True)
-
-    def _spin(self) -> None:
-        for frame in itertools.cycle(self.FRAMES):
-            if self._stop.is_set():
-                break
-            elapsed = time.time() - self._start
-            print(f"\r  {frame} {self.msg}  [{elapsed:.1f}s]", end="", flush=True)
-            time.sleep(0.1)
-
-    def __enter__(self) -> "Spinner":
-        self._start = time.time()
-        self._thread.start()
-        return self
-
-    def __exit__(self, *_) -> None:
-        self._stop.set()
-        self._thread.join()
-        elapsed = time.time() - self._start
-        print(f"\r  ✓ {self.msg}  [{elapsed:.1f}s]", flush=True)
-
-
 def download_battles() -> None:
-    dest = RAW / "gen1rb.parquet"
+    dest = RAW / "gen8rb.parquet"
     if dest.exists():
         size_mb = dest.stat().st_size / 1_048_576
-        print(f"  gen1rb.parquet ya existe ({size_mb:.1f} MB) — saltando.")
+        print(f"  gen8rb.parquet ya existe ({size_mb:.1f} MB) — saltando.")
         return
 
     print(f"  Fuente : {REPLAYS_REPO}")
-    print(f"  Filtro : formatid == '{FORMAT_FILTER}'")
-    print(f"  Modo   : streaming (evita bajar los 66 GB completos)\n")
+    print(f"  Archivos: {len(GEN8_RB_FILES)} partes de Gen 8 Random Battle\n")
 
-    ds = load_dataset(REPLAYS_REPO, split="train", streaming=True)
-    filtered = ds.filter(lambda row: row["formatid"] == FORMAT_FILTER)
+    frames = []
+    for filename in tqdm(GEN8_RB_FILES, desc="  Descargando partes", unit=" archivo", colour="cyan"):
+        path = hf_hub_download(repo_id=REPLAYS_REPO, filename=filename, repo_type="dataset")
+        frames.append(pd.read_parquet(path))
+        tqdm.write(f"  ✓ {filename} ({frames[-1].shape[0]:,} batallas)")
 
-    BATCH_SIZE = 5_000
-    batch: list[dict] = []
-    writer: pq.ParquetWriter | None = None
-    total_written = 0
-
-    with tqdm(
-        desc="  Descargando",
-        unit=" batallas",
-        colour="cyan",
-        bar_format="  {desc}: {n:,}{unit} [{elapsed}, {rate_fmt}]",
-    ) as pbar:
-        for row in filtered:
-            batch.append(row)
-            if len(batch) >= BATCH_SIZE:
-                table = pa.Table.from_pylist(batch)
-                if writer is None:
-                    writer = pq.ParquetWriter(dest, table.schema)
-                writer.write_table(table)
-                total_written += len(batch)
-                batch = []
-                pbar.set_postfix_str(f"{dest.stat().st_size / 1_048_576:.0f} MB en disco")
-            pbar.update(1)
-
-    if batch:
-        table = pa.Table.from_pylist(batch)
-        if writer is None:
-            writer = pq.ParquetWriter(dest, table.schema)
-        writer.write_table(table)
-        total_written += len(batch)
-
-    if writer:
-        writer.close()
+    df = pd.concat(frames, ignore_index=True)
+    df.to_parquet(dest, index=False)
 
     size_mb = dest.stat().st_size / 1_048_576
-    schema = pq.read_schema(dest)
     print(f"\n  Guardado → {dest}")
-    print(f"  {total_written:,} batallas  |  {size_mb:.1f} MB  |  {len(schema.names)} columnas")
-    print(f"  Columnas: {schema.names}")
+    print(f"  {len(df):,} batallas  |  {size_mb:.1f} MB  |  {len(df.columns)} columnas")
+    print(f"  Columnas: {list(df.columns)}")
     print()
-    # Lee solo el primer row group para evitar cargar el archivo entero
-    first_rows = pq.ParquetFile(dest).read_row_group(0, columns=["id", "players", "rating", "uploadtime"])
-    print(first_rows.to_pandas().head(3).to_string(index=False))
+    print(df[["id", "players", "rating", "uploadtime"]].head(3).to_string(index=False))
 
 
 def download_stats() -> None:
@@ -155,7 +95,7 @@ def main() -> None:
 
     RAW.mkdir(parents=True, exist_ok=True)
 
-    section("1/2  Batallas gen1randombattle")
+    section("1/2  Batallas gen8randombattle")
     download_battles()
 
     section("2/2  Pokémon stats (PokeAPI)")

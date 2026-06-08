@@ -5,7 +5,7 @@ This file provides guidance to Gemini CLI when working with code in this reposit
 ## Requisitos del trabajo (Aprendizaje Maquinal — Proyecto 3)
 
 - **Entrega:** 2 junio 2026, 23:59
-- **Dataset:** mínimo 100,000 registros → 107,585 batallas gen1randombattle reales (HolidayOugi/pokemon-showdown-replays) ✅
+- **Dataset:** mínimo 100,000 registros → batallas gen8randombattle reales (HolidayOugi/pokemon-showdown-replays) ✅
 - **Técnicas:** 3 distintas (agrupación, clasificación o refuerzo) → K-Means + XGBoost + Q-Learning ✅
 - **Informe:** formato IEEE doble columna, **máximo 6 páginas**
 - **Video:** máximo 6 minutos, **todos los integrantes deben aparecer** en cámara
@@ -13,7 +13,7 @@ This file provides guidance to Gemini CLI when working with code in this reposit
 
 ### Gap conceptual a justificar en el informe
 
-El enunciado pide "obtener conocimiento de dicha base de datos" con las 3 técnicas. K-Means y XGBoost usan PokeChamp directamente. El agente RL entrena contra `RandomPlayer` vía `poke-env`, no consume el dataset en entrenamiento. **Justificación a incluir en el informe:** el diseño del espacio de estados (variables discretas, rangos de HP) y la función de reward están informados por el análisis previo del dataset (qué features discriminan victorias según XGBoost, qué arquetipos de equipo emergen según K-Means).
+El enunciado pide "obtener conocimiento de dicha base de datos" con las 3 técnicas. K-Means y XGBoost usan el dataset directamente. El agente RL entrena contra `RandomPlayer` vía `poke-env`, no consume el dataset en entrenamiento. **Justificación a incluir en el informe:** el diseño del espacio de estados (variables discretas, rangos de HP) y la función de reward están informados por el análisis previo del dataset (qué features discriminan victorias según XGBoost, qué arquetipos de equipo emergen según K-Means).
 
 ## Commands
 
@@ -81,7 +81,7 @@ FastAPI dashboard (src/06_dashboard.py, port 9000)
 
 **Hyperparameters:** lr=0.1, gamma=0.9, epsilon 1.0→0.05 over 1500 of 2000 episodes, `random_state=42` everywhere.
 
-**Dataset:** HolidayOugi/pokemon-showdown-replays, filtrado a `gen1randombattle` al descargar → `data/raw/gen1rb.parquet` (~107k batallas humanas reales). No bajar dataset completo (66.8 GB).
+**Dataset:** HolidayOugi/pokemon-showdown-replays, filtrado a `gen8randombattle` al descargar → `data/raw/gen8rb.parquet` (~107k batallas humanas reales). No bajar dataset completo (66.8 GB).
 
 ## Outputs
 

@@ -5,14 +5,19 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Requisitos del trabajo (Aprendizaje Maquinal — Proyecto 3)
 
 - **Entrega:** 2 junio 2026, 23:59
-- **Dataset:** mínimo 100,000 registros → 107,585 batallas gen1randombattle reales (HolidayOugi/pokemon-showdown-replays) ✅
+- **Dataset:** mínimo 100,000 registros → batallas gen8randombattle reales (HolidayOugi/pokemon-showdown-replays) ✅
 - **Técnicas:** 3 distintas (agrupación, clasificación o refuerzo) → K-Means + XGBoost + Q-Learning ✅
 - **Informe:** formato IEEE doble columna, **máximo 6 páginas**
 - **Video:** máximo 6 minutos, **todos los integrantes deben aparecer** en cámara
 
-### Gap conceptual a justificar en el informe
+### Cumplimiento MVP: "obtener conocimiento de dicha base de datos"
 
-El enunciado pide "obtener conocimiento de dicha base de datos" con las 3 técnicas. K-Means y XGBoost usan el dataset directamente. El agente RL entrena contra `RandomPlayer` vía `poke-env`, no consume el dataset en entrenamiento. **Justificación:** el diseño del espacio de estados (variables discretas, rangos de HP) y la función de reward están informados por el análisis previo del dataset (features discriminantes según XGBoost, arquetipos según K-Means).
+Las 3 técnicas extraen conocimiento del dataset gen8randombattle:
+- **K-Means:** agrupa equipos reales → arquetipos ofensivos/defensivos/mixtos
+- **XGBoost:** predice `winning_action_type` → identifica features discriminantes (speed_advantage, type_coverage, stat_total_diff)
+- **Q-Learning:** el espacio de estados usa exactamente las variables más discriminantes según XGBoost (`hp_self/opp`, `type_advantage`, `can_outspeed`); los rangos de HP (4 buckets) se derivan de la distribución observada en el dataset. El agente aplica el conocimiento extraído, no lo ignora.
+
+Documentar esta cadena explícitamente en la sección de Metodología del informe.
 
 ## Estilo de desarrollo
 
@@ -56,7 +61,7 @@ HF_TOKEN=hf_...   # https://huggingface.co/settings/tokens (Read role)
 `showdown/` is downloaded by `00_setup.py` (git clone of smogon/pokemon-showdown) — it is not committed to this repo.
 
 - [x] `src/00_setup.py` — instala deps, clona Showdown, crea carpetas
-- [x] `src/01_download.py` — descarga `gen1rb.parquet` y `pokemon_stats.csv`
+- [x] `src/01_download.py` — descarga `gen8rb.parquet` y `pokemon_stats.csv`
 - [ ] `src/02_preprocess.py` — feature engineering → `battles_featured.parquet`
 - [ ] `src/03_clustering.py` — K-Means arquetipos de equipo
 - [ ] `src/04_classification.py` — XGBoost predicción de acción ganadora
@@ -80,7 +85,7 @@ FastAPI dashboard (src/06_dashboard.py, port 9000)
 ```
 
 **Data flow:**
-- `data/raw/gen1rb.parquet` + `data/raw/pokemon_stats.csv` → `src/02_preprocess.py` → `data/processed/battles_featured.parquet`
+- `data/raw/gen8rb.parquet` + `data/raw/pokemon_stats.csv` → `src/02_preprocess.py` → `data/processed/battles_featured.parquet`
 - `data/processed/` → `src/03_clustering.py` / `src/04_classification.py` → `outputs/models/`
 - Training checkpoints → POST `http://localhost:9000/update` (silently ignored if dashboard not running)
 
@@ -98,7 +103,7 @@ FastAPI dashboard (src/06_dashboard.py, port 9000)
 
 ## Preprocessing spec (`src/02_preprocess.py`)
 
-Input: `data/raw/gen1rb.parquet` (gen1randombattle already filtered), `data/raw/pokemon_stats.csv`.
+Input: `data/raw/gen8rb.parquet` (gen8randombattle already filtered), `data/raw/pokemon_stats.csv`.
 
 Extract per battle from the `log` field:
 - `team_p1`, `team_p2`: list of up to 6 Pokémon per team

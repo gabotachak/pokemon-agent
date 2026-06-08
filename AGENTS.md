@@ -3,7 +3,7 @@
 ## Objetivo
 
 Entrenar un agente de Q-Learning para ganar combates con equipo completo de 6
-Pokémon en Pokémon Showdown (Gen 1 Random Battle), con visualización en vivo
+Pokémon en Pokémon Showdown (Gen 8 Random Battle), con visualización en vivo
 del combate en el browser y dashboard de entrenamiento en tiempo real.
 
 El proyecto combina tres técnicas de ML:
@@ -16,7 +16,7 @@ El proyecto combina tres técnicas de ML:
 ## Fases del proyecto
 
 ### Fase MVP (obligatoria)
-Agente Q-Learning tabular que juega Gen 1 Random Battle con equipo de 6.
+Agente Q-Learning tabular que juega Gen 8 Random Battle con equipo de 6.
 Acciones: elegir movimiento O hacer switch. Oponente: RandomPlayer.
 
 ### Fase Ambiciosa (extensión futura, no bloquea entrega)
@@ -54,8 +54,8 @@ Para ver el dashboard: abrir `http://localhost:9000` en el browser.
 
 ### Principal — Pokémon Showdown Replays (HuggingFace)
 - **URL:** https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays
-- **Tamaño:** 31.7M batallas totales, **107,585 gen1randombattle** de jugadores humanos reales
-- **Filtro a aplicar:** `formatid == 'gen1randombattle'` al descargar — no bajar el dataset completo (66.8 GB)
+- **Tamaño:** 31.7M batallas totales, **gen8randombattle** de jugadores humanos reales
+- **Filtro a aplicar:** `formatid == 'gen8randombattle'` al descargar — no bajar el dataset completo (66.8 GB)
 - **Schema:** `id`, `format`, `players`, `log`, `uploadtime`, `views`, `formatid`, `rating`
 - **Uso:** clustering (técnica 1) y clasificación (técnica 2)
 
@@ -100,7 +100,7 @@ project/
 ├── showdown/                   # servidor Showdown clonado aquí
 ├── data/
 │   ├── raw/
-│   │   ├── pokechamp/
+│   │   ├── gen8rb.parquet
 │   │   └── pokemon_stats.csv
 │   └── processed/
 │       ├── battles.parquet
@@ -159,9 +159,9 @@ project/
 
 ### 1. Descarga de datos (`src/01_download.py`)
 
-- Descargar solo las filas `gen1randombattle` de HolidayOugi/pokemon-showdown-replays
+- Descargar solo las filas `gen8randombattle` de HolidayOugi/pokemon-showdown-replays
   usando `datasets` con filtro — NO `snapshot_download` (evita bajar 66 GB)
-  → `data/raw/gen1rb.parquet`
+  → `data/raw/gen8rb.parquet`
 - Descargar pokemon_stats.csv con requests
   → `data/raw/pokemon_stats.csv`
 - Imprimir: número de batallas descargadas, tamaño en disco, primeras filas
@@ -171,7 +171,7 @@ project/
 ### 2. Preprocesamiento (`src/02_preprocess.py`)
 
 **Cargar y filtrar:**
-- Cargar `data/raw/gen1rb.parquet` — ya filtrado a gen1randombattle (~107k batallas)
+- Cargar `data/raw/gen8rb.parquet` — ya filtrado a gen8randombattle (~107k batallas)
 - No se requiere filtro adicional por formato
 
 **Extraer por batalla:**
@@ -204,7 +204,7 @@ project/
 
 ### 3. Clustering — Arquetipos de equipo (`src/03_clustering.py`)
 
-**Objetivo:** Descubrir qué estilos de equipo emergen naturalmente en Gen 1
+**Objetivo:** Descubrir qué estilos de equipo emergen naturalmente en Gen 8
 (ej: equipos rápidos y ofensivos, equipos lentos y defensivos, equipos mixtos)
 
 **Proceso:**
@@ -255,7 +255,7 @@ project/
 
 ### 5. Agente RL con poke-env (`src/05_train_agent.py`)
 
-**Objetivo:** Agente Q-Learning que juega Gen 1 Random Battle con equipo
+**Objetivo:** Agente Q-Learning que juega Gen 8 Random Battle con equipo
 completo de 6 Pokémon, eligiendo entre movimientos y switches cada turno.
 
 #### 5.1 Clase `QLearningPlayer(poke_env.player.Player)`
@@ -383,7 +383,7 @@ poblar figuras con valores reales.
 
 - Distribución de duración de combates (turnos)
   → `outputs/figures/battle_duration.png`
-- Top 10 Pokémon más usados en Gen 1 Random Battle
+- Top 10 Pokémon más usados en Gen 8 Random Battle
   → `outputs/figures/top_pokemon.png`
 - Curva de aprendizaje: win rate vs episodios (con línea de RandomPlayer
   al 50% como baseline)
@@ -412,18 +412,18 @@ sección debe caber en el espacio asignado. Priorizar figuras sobre texto.
 
 **Justificar conexión RL-dataset:** mencionar explícitamente en la sección de
 metodología que el diseño del MDP (variables de estado, reward shaping) se
-derivó del análisis previo del dataset PokeChamp (features discriminantes del
+derivó del análisis previo del dataset (features discriminantes del
 clasificador, arquetipos del clustering).
 
 **Secciones:**
 
-1. **Abstract** — máx 150 palabras. Dataset PokeChamp (2M batallas Gen 1),
-   tres técnicas, hallazgo principal de cada una, resultado del agente.
+1. **Abstract** — máx 150 palabras. Dataset gen8randombattle, tres técnicas,
+   hallazgo principal de cada una, resultado del agente.
 
-2. **I. Introducción** — Pokémon Showdown como benchmark de IA, por qué Gen 1
-   (mecánicas simples, sin items, sin habilidades), motivación, estructura.
+2. **I. Introducción** — Pokémon Showdown como benchmark de IA, por qué Gen 8,
+   motivación, estructura.
 
-3. **II. Dataset y Preprocesamiento** — PokeChamp, filtrado Gen 1 Random Battle,
+3. **II. Dataset y Preprocesamiento** — HolidayOugi/pokemon-showdown-replays, filtrado gen8randombattle,
    tabla de features extraídas, estadísticas descriptivas del dataset limpio.
 
 4. **III. Metodología**
@@ -444,12 +444,12 @@ clasificador, arquetipos del clustering).
 
 6. **V. Conclusiones** — hallazgos, limitaciones documentadas:
    - Q-Learning tabular no escala bien a estados continuos
-   - Gen 1 únicamente (sin items ni habilidades)
+   - Q-Learning tabular con estado discreto (tradeoff interpretabilidad vs escala)
    - Oponente RandomPlayer es débil — win rate alto no garantiza competitividad
    - Trabajo futuro: DQN, oponente MaxDamage, equipo fijo optimizado
 
 7. **Referencias** — formato IEEE, mínimo 5:
-   - PokeChamp dataset (Jin et al., 2025)
+   - HolidayOugi/pokemon-showdown-replays (HuggingFace)
    - poke-env (Sahovic, 2020)
    - XGBoost (Chen & Guestrin, 2016)
    - Sutton & Barto — RL: An Introduction, 2nd ed. (2018)
@@ -498,8 +498,8 @@ uv run python src/07_report_figures.py
 - El estado de la Q-table es intencionalmente pequeño (8 variables discretas)
   para que el aprendizaje tabular sea viable. Documentar esta decisión
   en el informe: ventaja = interpretabilidad, limitación = no escala
-- Si PokeChamp supera la RAM disponible, usar muestra de 300,000 batallas
-  Gen 1 — sigue cumpliendo el requisito de 100,000 registros
+- Si el dataset supera la RAM disponible, usar muestra de 300,000 batallas
+  gen8randombattle — sigue cumpliendo el requisito de 100,000 registros
 - El dashboard tolera que el script de entrenamiento no esté corriendo
   y viceversa — los errores de conexión se ignoran silenciosamente
 - **Para el video de 6 minutos:**
