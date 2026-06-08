@@ -44,6 +44,10 @@ MODELS.mkdir(parents=True, exist_ok=True)
 RANDOM_STATE = 42
 TEST_SIZE = 0.2
 
+# NOTE: switch_rate is intentionally EXCLUDED — it is leakage. It is computed
+# from the winner's switch count (02_preprocess.py), and the target's `switch`
+# class is decided by that same count, making the two circular (switch AUC≈0.955
+# when included). Dropping it gives honest, non-circular metrics.
 FEATURE_COLS = [
     "avg_hp_p1", "avg_attack_p1", "avg_defense_p1",
     "avg_sp_attack_p1", "avg_sp_defense_p1", "avg_speed_p1",
@@ -51,7 +55,7 @@ FEATURE_COLS = [
     "avg_hp_p2", "avg_attack_p2", "avg_defense_p2",
     "avg_sp_attack_p2", "avg_sp_defense_p2", "avg_speed_p2",
     "type_diversity_p2", "n_fast_pokemon_p2", "type_coverage_p2",
-    "stat_total_diff", "speed_advantage_ratio", "switch_rate", "n_turns",
+    "stat_total_diff", "speed_advantage_ratio", "n_turns",
 ]
 TARGET_COL = "winning_action_type"
 

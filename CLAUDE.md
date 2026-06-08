@@ -13,11 +13,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ### Cumplimiento MVP: "obtener conocimiento de dicha base de datos"
 
 Las 3 técnicas extraen conocimiento del dataset gen8randombattle:
-- **K-Means:** agrupa equipos reales → arquetipos ofensivos/defensivos/mixtos
-- **XGBoost:** predice `winning_action_type` → identifica features discriminantes (speed_advantage, type_coverage, stat_total_diff)
-- **Q-Learning:** el espacio de estados usa exactamente las variables más discriminantes según XGBoost (`hp_self/opp`, `type_advantage`, `can_outspeed`); los rangos de HP (4 buckets) se derivan de la distribución observada en el dataset. El agente aplica el conocimiento extraído, no lo ignora.
+- **K-Means:** agrupa equipos reales (stats de construcción) → arquetipos ofensivos/defensivos débilmente separados (silhouette=0.136)
+- **XGBoost:** predice `winning_action_type` → top features reales (por ganancia): `n_turns`, `type_diversity`. NOTA: `switch_rate` se EXCLUYE por fuga de información (es circular con la clase `switch` del objetivo — ambos derivan del conteo de cambios del ganador). `speed_advantage_ratio` resultó poco predictivo (último lugar).
+- **Q-Learning:** el espacio de estados se fundamenta en la **mecánica del juego** y la estructura del combate, NO en derivaciones automáticas de K-Means/XGBoost. `type_advantage` viene del type chart de poke-env (no es feature de XGBoost); `can_outspeed` refleja el factor velocidad de la Introducción (aunque `speed_advantage_ratio` fue poco predictivo); los buckets de HP son cuartiles fijos hardcodeados (0–25/25–50/50–75/75–100%), NO derivados de la distribución del dataset.
 
-Documentar esta cadena explícitamente en la sección de Metodología del informe.
+Honestidad metodológica: documentar en el informe tanto los resultados como las limitaciones (separación débil de clústeres, fuga corregida, línea base débil del agente vs RandomPlayer). No inflar la "cadena metodológica".
 
 ## Estilo de desarrollo
 
@@ -68,7 +68,7 @@ HF_TOKEN=hf_...   # https://huggingface.co/settings/tokens (Read role)
 - [x] `src/05_train_agent.py` — Q-Learning agent (QLearningPlayer + entrenamiento)
 - [x] `src/06_dashboard.py` — FastAPI dashboard en tiempo real
 - [x] `src/07_report_figures.py` — figuras finales para el informe
-- [ ] `report/ieee_report.md` — informe IEEE doble columna (máx 6 páginas)
+- [x] `report/ieee_report.md` — informe IEEE doble columna (6 páginas; fuente Typst `ieee_report.typ`)
 
 ## Architecture
 
