@@ -79,7 +79,6 @@ venv.bak/
 
 # uv / packaging
 .uv/
-uv.lock
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -107,9 +106,8 @@ yarn-error.log*
 data/raw/
 data/processed/
 
-# Outputs del proyecto — models ignorados (pkl pesados), figures trackeadas para el informe
-outputs/models/
-!outputs/models/training_log.json
+# Outputs del proyecto — pkl pesados ignorados, training_log.json y figures trackeadas para el informe
+outputs/models/*.pkl
 
 # =========================
 # IDEs and Editors

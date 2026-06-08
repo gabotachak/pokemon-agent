@@ -10,13 +10,13 @@
 
 **Agente de Q-Learning que aprende a jugar Pokémon — en tiempo real**
 
-[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
+[![Python](https://img.shields.io/badge/Python-3.13+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org)
 [![XGBoost](https://img.shields.io/badge/XGBoost-189DEE?style=for-the-badge&logo=xgboost&logoColor=white)](https://xgboost.readthedocs.io)
 [![HuggingFace](https://img.shields.io/badge/HuggingFace-FFD21E?style=for-the-badge&logo=huggingface&logoColor=black)](https://huggingface.co/datasets/HolidayOugi/pokemon-showdown-replays)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![Entrega](https://img.shields.io/badge/Entrega-2_Jun_2026-red?style=for-the-badge&logo=googlecalendar&logoColor=white)]()
+[![Informe](https://img.shields.io/badge/Informe-IEEE_6_páginas-blue?style=for-the-badge&logo=readthedocs&logoColor=white)](report/ieee_report.pdf)
 
 </div>
 
@@ -26,7 +26,7 @@
 
 Proyecto de **Sistemas Inteligentes** que entrena un agente de Reinforcement Learning para ganar combates Pokémon con equipo completo de 6. El agente aprende desde cero usando Q-Learning tabular, peleando contra un oponente aleatorio en **Pokémon Showdown** (servidor local), mientras un dashboard muestra el progreso en tiempo real.
 
-El proyecto combina tres técnicas de ML sobre ~2 millones de batallas reales:
+El proyecto combina tres técnicas de ML sobre **484,130 batallas reales** de jugadores humanos:
 
 | # | Técnica | Qué hace |
 |---|---------|----------|
@@ -113,7 +113,7 @@ flowchart TD
 ### Setup inicial (una sola vez)
 
 ```bash
-git clone https://github.com/tu-usuario/pokemon-agent.git
+git clone https://github.com/gabotachak/pokemon-agent.git
 cd pokemon-agent
 uv run python src/00_setup.py
 uv run python src/01_download.py
@@ -140,11 +140,14 @@ uv run python src/06_dashboard.py
 uv run python src/05_train_agent.py
 ```
 
-### Figuras e informe
+### Figuras, informe y PDF
 
 ```bash
-uv run python src/07_report_figures.py
+uv run python src/07_report_figures.py  # genera figuras en outputs/figures/
+make pdf                                 # compila report/ieee_report.pdf (requiere typst)
 ```
+
+O en un solo paso: `make pipeline`
 
 ---
 
@@ -157,6 +160,7 @@ uv run python src/07_report_figures.py
 | ML | scikit-learn, XGBoost, NumPy, pandas |
 | Dashboard | FastAPI + Chart.js |
 | Gestión de deps | `uv` |
+| Informe PDF | typst + charged-ieee template |
 | Visualización | matplotlib, seaborn |
 
 ---
@@ -165,24 +169,28 @@ uv run python src/07_report_figures.py
 
 ```
 pokemon-agent/
+├── Makefile                     # make pipeline / make pdf / make train …
 ├── src/
-│   ├── 00_setup.py          # instalación y configuración
-│   ├── 01_download.py       # descarga de datasets
-│   ├── 02_preprocess.py     # feature engineering
-│   ├── 03_clustering.py     # K-Means arquetipos
-│   ├── 04_classification.py # XGBoost predicción
-│   ├── 05_train_agent.py    # Q-Learning agente
-│   ├── 06_dashboard.py      # FastAPI dashboard
-│   └── 07_report_figures.py # figuras para informe
+│   ├── 00_setup.py              # instalación y configuración
+│   ├── 01_download.py           # descarga de datasets
+│   ├── 02_preprocess.py         # feature engineering
+│   ├── 03_clustering.py         # K-Means arquetipos
+│   ├── 04_classification.py     # XGBoost predicción
+│   ├── 05_train_agent.py        # Q-Learning agente
+│   ├── 06_dashboard.py          # FastAPI dashboard
+│   └── 07_report_figures.py     # figuras para informe
 ├── data/
-│   ├── raw/                 # datos originales
-│   └── processed/           # parquet procesado
+│   ├── raw/                     # datos originales (gitignored)
+│   └── processed/               # parquet procesado (gitignored)
 ├── outputs/
-│   ├── figures/             # gráficas
-│   ├── models/              # modelos entrenados (.pkl)
-│   └── metrics.json         # métricas unificadas
+│   ├── figures/                 # gráficas generadas
+│   ├── models/                  # modelos .pkl (gitignored) + training_log.json
+│   └── metrics.json             # métricas unificadas de los 3 modelos
 └── report/
-    └── ieee_report.md       # informe final
+    ├── ieee_report.md           # informe master (edición manual)
+    ├── ieee_report.typ          # fuente typst — formato IEEE doble columna
+    ├── references.bib           # bibliografía BibTeX
+    └── ieee_report.pdf          # PDF final compilado con typst
 ```
 
 ---
