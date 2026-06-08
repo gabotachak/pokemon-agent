@@ -3,7 +3,7 @@
 #show: ieee.with(
   title: [Aprendizaje Maquinal en Pokémon Showdown: Agrupación, Clasificación y Aprendizaje por Refuerzo],
   abstract: [
-    Pokémon Showdown genera millones de replays donde las decisiones de jugadores humanos bajo incertidumbre quedan completamente registradas. Aplicamos tres técnicas de aprendizaje maquinal a 484,130 batallas reales del formato Gen 8 Random Battle para extraer conocimiento de este corpus. Agrupación con K-Means revela dos arquetipos de equipo: ofensivos-rápidos y defensivos-resistentes. Clasificación con XGBoost muestra que la velocidad relativa del equipo es el predictor dominante del estilo de combate ganador (64% de exactitud). Un agente de aprendizaje por refuerzo aprende a ganar el 76.6% de sus batallas por prueba y error, usando las variables que XGBoost identificó como más discriminantes. Las tres técnicas forman un pipeline integrado donde cada etapa transfiere conocimiento a la siguiente.
+    Pokémon Showdown genera millones de replays donde las decisiones de jugadores humanos bajo incertidumbre quedan completamente registradas. Aplicamos tres técnicas de aprendizaje maquinal a 484,130 batallas reales del formato Gen 8 Random Battle para extraer conocimiento de este corpus. Agrupación con K-Means revela dos arquetipos de equipo: ofensivos-rápidos y defensivos-resistentes. Clasificación con XGBoost muestra que la velocidad relativa del equipo es el predictor dominante del estilo de combate ganador (64% de exactitud). Un agente de aprendizaje por refuerzo aprende a ganar el 76.6% de sus batallas por prueba y error, usando las variables que XGBoost identificó como más discriminantes. Las tres técnicas forman un flujo integrado donde cada etapa transfiere conocimiento a la siguiente.
   ],
   authors: (
     (
@@ -25,7 +25,7 @@
 
 = Introducción
 
-Pokémon es una franquicia de videojuegos de rol creada por Game Freak en 1996, con más de 440 millones de copias vendidas. Su mecánica central son los combates por turnos entre criaturas llamadas Pokémon, cada una con estadísticas base — puntos de vida (HP, del inglés _Hit Points_), Ataque, Defensa, Velocidad —, tipos elementales y hasta cuatro movimientos. Estos combates son estratégicos: cada turno ambos jugadores eligen una acción simultáneamente sin conocer la decisión del rival.
+Pokémon es una franquicia de videojuegos de rol creada por Game Freak en 1996, con más de 440 millones de copias vendidas @pokemonfranchise. Su mecánica central son los combates por turnos entre criaturas llamadas Pokémon, cada una con estadísticas base — puntos de vida (HP, del inglés _Hit Points_), Ataque, Defensa, Velocidad —, tipos elementales y hasta cuatro movimientos. Estos combates son estratégicos: cada turno ambos jugadores eligen una acción simultáneamente sin conocer la decisión del rival.
 
 Dos factores dominan la táctica: la *ventaja de tipo* y la *velocidad*. Un movimiento de tipo Agua hace el doble de daño a un Pokémon de tipo Fuego, pero la mitad a uno de Planta — hay dieciocho tipos con relaciones asimétricas entre ellos. La velocidad determina quién actúa primero: el Pokémon más veloz puede noquear al rival antes de recibir contraataque, lo que convierte la composición del equipo en una decisión estratégica de alto impacto.
 
@@ -43,7 +43,7 @@ El aprendizaje por refuerzo (RL, del inglés _Reinforcement Learning_) ha sido a
 
 En mayor escala, AlphaStar @alphastar y OpenAI Five @openai5 demostraron que RL con redes profundas puede alcanzar nivel profesional en juegos como StarCraft II y Dota 2, aunque con recursos computacionales inaccesibles para la mayoría de contextos de investigación.
 
-A diferencia de estos trabajos, este pipeline combina agrupación no supervisada, clasificación supervisada y RL tabular interpretable en un flujo coherente sobre datos Gen 8, priorizando la extracción de conocimiento comprensible sobre el rendimiento máximo.
+A diferencia de estos trabajos, este enfoque combina agrupación no supervisada, clasificación supervisada y RL tabular interpretable en un flujo coherente sobre datos Gen 8, priorizando la extracción de conocimiento comprensible sobre el rendimiento máximo.
 
 = Dataset y Preprocesamiento
 
@@ -61,7 +61,7 @@ El corpus HolidayOugi/pokemon-showdown-replays @dataset contiene 31.7 millones d
   caption: [Izq.: duración de batallas en turnos (mayoría entre 15 y 40). Der.: Pokémon más frecuentes — reflejan el pool aleatorio del formato.],
 ) <fig-eda>
 
-== Parsing y Feature Engineering
+== Análisis del Log y Extracción de Características
 
 El campo `log` de cada batalla codifica cada evento en líneas del tipo `|COMANDO|argumentos`. Se extrae: los equipos revelados, el ganador, duración, movimientos usados y cambios voluntarios. Los nombres de Pokémon se normalizan y combinan con estadísticas base @pokeapi para calcular promedios por equipo.
 
@@ -69,7 +69,7 @@ El campo `log` de cada batalla codifica cada evento en líneas del tipo `|COMAND
   table(
     columns: (auto, 1fr),
     stroke: 0.5pt,
-    table.header([*Feature*], [*Interpretación táctica*]),
+    table.header([*Característica*], [*Interpretación táctica*]),
     [`avg_speed`], [Velocidad promedio — el Pokémon más veloz actúa primero cada turno],
     [`speed_advantage_ratio`], [Velocidad p1 / p2 — quién controla el ritmo del combate],
     [`stat_total_diff`], [Diferencia de stats totales — proxy de ventaja estadística global],
@@ -77,7 +77,7 @@ El campo `log` de cada batalla codifica cada evento en líneas del tipo `|COMAND
     [`switch_rate`], [Cambios por turno — estilo agresivo (bajo) vs. defensivo (alto)],
     [`n_fast_pokemon`], [Pokémon con velocidad >100 — capaces de actuar antes que la mayoría],
   ),
-  caption: [Features derivadas con su interpretación en contexto de combate (selección).],
+  caption: [Características derivadas con su interpretación en contexto de combate (selección).],
 ) <tab-features>
 
 La *variable objetivo* para clasificación es `winning_action_type`: el tipo de acción más frecuente del jugador ganador. Responde a _¿cómo ganan los que ganan?_ Cuatro categorías: movimiento físico, especial, de estado o cambio de Pokémon.
@@ -94,13 +94,13 @@ $ J = sum_k sum_(x in C_k) norm(x - mu_k)^2 $
 
 donde $mu_k$ es el centro del grupo $k$. No requiere etiquetas previas — descubre la estructura que emerge naturalmente de los datos.
 
-Para elegir el número de grupos K, usamos el _silhouette score_: mide qué tan bien separado está cada punto de los demás grupos. Se calcula comparando la cohesión interna con la distancia al grupo vecino más cercano:
+Para elegir el número de grupos K, usamos el _silhouette score_ @silhouette: mide qué tan bien separado está cada punto de los demás grupos. Se calcula comparando la cohesión interna con la distancia al grupo vecino más cercano:
 
 $ s(i) = (b(i) - a(i)) / max(a(i), b(i)), quad s(i) in [-1, 1] $
 
 donde $a(i)$ es la distancia media a los otros puntos del mismo grupo y $b(i)$ la distancia media al grupo vecino más cercano. Valores cercanos a 1 indican grupos bien separados; valores cercanos a 0 indican solapamiento.
 
-Pipeline: vectores de equipo (9 features) → normalización → análisis de componentes principales (PCA, para reducir a 2 dimensiones y poder visualizar) → K-Means K=2..10.
+Flujo: vectores de equipo (9 características) → normalización → análisis de componentes principales (PCA @pca, para reducir a 2 dimensiones y poder visualizar) → K-Means K=2..10.
 
 #figure(
   image("../outputs/figures/elbow_curve.png"),
@@ -131,9 +131,9 @@ En cada iteración, se elige el árbol $f_t$ que minimiza la pérdida acumulada 
 
 $ cal(L)^((t)) = sum_i ell(y_i, hat(y)_i^((t-1)) + f_t (x_i)) + Omega(f_t) $
 
-Además de predicciones, XGBoost cuantifica la *importancia* de cada feature: cuánto contribuyó cada variable al ensemble.
+Además de predicciones, XGBoost cuantifica la *importancia* de cada característica: cuánto contribuyó cada variable al conjunto.
 
-*Configuración:* 22 features, split 80/20 estratificado, 1000 árboles máximo con parada temprana a los 20 sin mejora, GPU. Mejor iteración: 820 árboles.
+*Configuración:* 22 características, split 80/20 estratificado, 1000 árboles máximo con parada temprana a los 20 sin mejora, GPU. Mejor iteración: 820 árboles.
 
 #figure(
   table(
@@ -146,7 +146,7 @@ Además de predicciones, XGBoost cuantifica la *importancia* de cada feature: cu
     [`switch`], [0.660], [0.640], [0.650], [0.955],
     [*promedio*], [], [], [*0.606*], [*0.826*],
   ),
-  caption: [Métricas por clase. Exactitud global: 64.0% (baseline: 54%). El área bajo la curva ROC (AUC-ROC) mide la capacidad discriminativa: 1.0 es perfecto, 0.5 equivale a clasificación aleatoria.],
+  caption: [Métricas por clase. Exactitud global: 64.0% (línea base: 54%). El área bajo la curva ROC (AUC-ROC) mide la capacidad discriminativa: 1.0 es perfecto, 0.5 equivale a clasificación aleatoria.],
 ) <tab-clf>
 
 #figure(
@@ -156,7 +156,7 @@ Además de predicciones, XGBoost cuantifica la *importancia* de cada feature: cu
     image("../outputs/figures/feature_importance.png"),
     image("../outputs/figures/confusion_matrix.png"),
   ),
-  caption: [Importancia de features por contribución al ensemble (izq.) y matriz de confusión normalizada (der.)],
+  caption: [Importancia de características por contribución al conjunto (izq.) y matriz de confusión normalizada (der.)],
 ) <fig-clf>
 
 #figure(
@@ -164,7 +164,7 @@ Además de predicciones, XGBoost cuantifica la *importancia* de cada feature: cu
   caption: [Curvas ROC por clase. El AUC-ROC de `switch` (0.955) destaca: cuando el ganador cambia frecuentemente de Pokémon, el patrón estadístico es inequívoco.],
 ) <fig-roc>
 
-La feature más importante es `speed_advantage_ratio`: en Gen 8, actuar primero puede significar noquear al rival sin recibir daño. El bajo F1 en `special` y `status` refleja desbalance — `physical` representa el 54% de los registros.
+La característica más importante es `speed_advantage_ratio`: en Gen 8, actuar primero puede significar noquear al rival sin recibir daño. El bajo F1 en `special` y `status` refleja desbalance — `physical` representa el 54% de los registros.
 
 == Aprendizaje por Refuerzo — Q-Learning
 
@@ -186,11 +186,11 @@ El término $r + gamma max_(a') Q(s', a')$ combina la recompensa inmediata $r$ c
     stroke: 0.5pt,
     table.header([*Variable*], [*Valores*], [*Origen en el corpus*]),
     [`hp_self/opp`], [4 rangos], [Distribución de HP en 484k batallas],
-    [`type_advantage`], [{-1,0,+1}], [Feature discriminante en XGBoost],
-    [`can_outspeed`], [booleano], [Derivada de `speed_advantage_ratio` — top feature],
+    [`type_advantage`], [{-1,0,+1}], [Característica discriminante en XGBoost],
+    [`can_outspeed`], [booleano], [Derivada de `speed_advantage_ratio` — característica principal],
     [`team_size_self/opp`], [1-6], [Tamaño de equipo diferencia arquetipos K-Means],
     [`n_available_moves`], [1-4], [Estructura del espacio de acción],
-    [`has_switch`], [booleano], [`switch_rate` fue feature relevante en el corpus],
+    [`has_switch`], [booleano], [`switch_rate` fue característica relevante en el corpus],
   ),
   caption: [Variables de estado del agente y su origen en el análisis previo. Su producto cartesiano define 27,648 estados teóricos.],
 ) <tab-states>
@@ -205,14 +205,14 @@ El agente juega contra un *RandomPlayer* — oponente que elige acciones uniform
 
 #figure(
   image("../outputs/figures/rl_learning_curve.png"),
-  caption: [Win rate promedio (ventana de 100 episodios) y decaimiento de ε durante el entrenamiento.],
+  caption: [Tasa de victorias promedio (ventana de 100 episodios) y decaimiento de ε durante el entrenamiento.],
 ) <fig-rl>
 
 = Resultados y Discusión
 
 *K-Means:* K=2, silhouette=0.136. PCA captura 40.4% de varianza en 2 dimensiones. Los centroides son interpretables como estilos ofensivo y defensivo débilmente separados, coherente con equipos de un pool aleatorio común.
 
-*XGBoost:* 64.0% de exactitud, +10 puntos sobre el baseline. `speed_advantage_ratio` lidera la importancia: quien actúa primero controla el combate. El F1 bajo en `special` (0.315) y `status` (0.377) refleja el desbalance de clases — `physical` domina el 54% de los registros. El AUC-ROC de `switch` (0.955) revela que los cambios de Pokémon son la señal estadística más discriminante: cuando el ganador cambia frecuentemente, el patrón es claro e inequívoco.
+*XGBoost:* 64.0% de exactitud, +10 puntos sobre la línea base. `speed_advantage_ratio` lidera la importancia: quien actúa primero controla el combate. El F1 bajo en `special` (0.315) y `status` (0.377) refleja el desbalance de clases — `physical` domina el 54% de los registros. El AUC-ROC de `switch` (0.955) revela que los cambios de Pokémon son la señal estadística más discriminante: cuando el ganador cambia frecuentemente, el patrón es claro e inequívoco.
 
 *Q-Learning:* el agente pasa de ~46% de victorias (nivel aleatorio) a 76.6% en 2,000 episodios. Solo visita 2,039 de los 27,648 estados teóricos posibles (7%) — una ventaja del enfoque tabular: el agente aprende únicamente sobre situaciones reales, sin gastar capacidad en combinaciones imposibles. La tabla Q es completamente inspeccionable: a diferencia de una red neuronal, se puede leer directamente qué acción prefiere el agente en cada situación concreta.
 
@@ -220,7 +220,7 @@ El agente juega contra un *RandomPlayer* — oponente que elige acciones uniform
 
 *Limitaciones:* el 76.6% es contra RandomPlayer y no generaliza a oponentes más fuertes. Q-Learning tabular no escala a estados continuos.
 
-*Comparativa de las tres técnicas:* las tres responden preguntas distintas y no compiten entre sí (Tabla 4). K-Means y XGBoost extraen conocimiento _descriptivo_ y _predictivo_ directamente del corpus histórico; Q-Learning produce conocimiento _procedimental_ — una política de juego — interactuando con el entorno en vivo. K-Means y Q-Learning ofrecen alta interpretabilidad (centroides legibles, tabla Q inspeccionable), mientras XGBoost sacrifica transparencia por capacidad predictiva. La complementariedad es la clave del pipeline: la salida descriptiva de las dos primeras define el espacio de estados de la tercera.
+*Comparativa de las tres técnicas:* las tres responden preguntas distintas y no compiten entre sí (Tabla 4). K-Means y XGBoost extraen conocimiento _descriptivo_ y _predictivo_ directamente del corpus histórico; Q-Learning produce conocimiento _procedimental_ — una política de juego — interactuando con el entorno en vivo. K-Means y Q-Learning ofrecen alta interpretabilidad (centroides legibles, tabla Q inspeccionable), mientras XGBoost sacrifica transparencia por capacidad predictiva. La complementariedad es la clave del flujo: la salida descriptiva de las dos primeras define el espacio de estados de la tercera.
 
 #figure(
   table(
@@ -228,9 +228,9 @@ El agente juega contra un *RandomPlayer* — oponente que elige acciones uniform
     stroke: 0.5pt,
     table.header([*Dimensión*], [*K-Means*], [*XGBoost*], [*Q-Learning*]),
     [Paradigma], [No superv.], [Supervisado], [Refuerzo],
-    [Entrada], [Vectores de equipo], [Features de batalla], [Estado en vivo],
-    [Conocimiento], [Arquetipos], [Features predictivas], [Política de juego],
-    [Métrica], [Silhouette 0.136], [Exactitud 64.0%], [Win rate 76.6%],
+    [Entrada], [Vectores de equipo], [Características de batalla], [Estado en vivo],
+    [Conocimiento], [Arquetipos], [Características predictivas], [Política de juego],
+    [Métrica], [Silueta 0.136], [Exactitud 64.0%], [Tasa victorias 76.6%],
     [Interpretab.], [Alta], [Media], [Alta],
     [Uso del dataset], [Directo], [Directo], [Indirecto],
   ),
@@ -245,4 +245,8 @@ El agente juega contra un *RandomPlayer* — oponente que elige acciones uniform
 
 La cadena K-Means → XGBoost → Q-Learning demuestra que la agrupación no supervisada y la clasificación supervisada pueden informar directamente el diseño de un agente de refuerzo. La tabla Q inspeccionable permite verificar comportamientos tácticamente coherentes: cambiar de Pokémon ante desventaja de tipo, atacar agresivamente cuando se puede actuar primero.
 
-Trabajo futuro: reemplazar la tabla Q por un DQN para manejar estados continuos, entrenar contra un oponente más fuerte, y analizar la tabla Q para extraer reglas de juego en lenguaje natural. Código: #link("https://github.com/gabotachak/pokemon-agent").
+Más allá del resultado por técnica, el aporte es metodológico: mostrar que un análisis descriptivo y predictivo del corpus puede acotar el espacio de estados de un agente de refuerzo, en lugar de definirlo de forma arbitraria.
+
+== Trabajo futuro
+
+Tres líneas extienden este trabajo. Primero, reemplazar la tabla Q por una red Q profunda (DQN) capaz de operar sobre estados continuos sin la discretización en rangos. Segundo, sustituir al RandomPlayer por oponentes más fuertes —agentes heurísticos o el propio agente mediante _self-play_— para superar el techo que impone una línea base aleatoria. Tercero, extraer reglas de juego en lenguaje natural directamente de la tabla Q, convirtiendo la política aprendida en conocimiento explícito y auditable.
