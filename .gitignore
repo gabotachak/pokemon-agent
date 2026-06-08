@@ -107,12 +107,9 @@ yarn-error.log*
 data/raw/
 data/processed/
 
-# Outputs del proyecto
-outputs/figures/
+# Outputs del proyecto — models ignorados (pkl pesados), figures trackeadas para el informe
 outputs/models/
-# Si quieres trackear algún JSON específico pero ignorar el resto:
-# !outputs/metrics.json
-# !outputs/models/training_log.json
+!outputs/models/training_log.json
 
 # =========================
 # IDEs and Editors
