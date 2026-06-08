@@ -18,6 +18,17 @@ from dotenv import load_dotenv
 warnings.filterwarnings("ignore")
 load_dotenv()
 
+# Estilo global de figuras: fuentes grandes para legibilidad en PDF doble columna
+plt.rcParams.update({
+    "font.size": 17,
+    "axes.titlesize": 19,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 17,
+    "xtick.labelsize": 15,
+    "ytick.labelsize": 15,
+    "legend.fontsize": 15,
+})
+
 ROOT = Path(__file__).parent.parent
 PROCESSED = ROOT / "data" / "processed"
 FIGURES = ROOT / "outputs" / "figures"
@@ -86,7 +97,7 @@ def plot_elbow(inertias: list, silhouettes: list, best_k: int) -> None:
     ax1.plot(ks, inertias, "o-", color="#e63946", linewidth=2, markersize=6)
     ax1.axvline(best_k, color="#ffd700", linestyle="--", alpha=0.7)
     ax1.set_xlabel("K")
-    ax1.set_ylabel("Inertia")
+    ax1.set_ylabel("Inercia")
     ax1.set_title("Curva del Codo")
     ax1.set_xticks(ks)
 
@@ -94,8 +105,8 @@ def plot_elbow(inertias: list, silhouettes: list, best_k: int) -> None:
     ax2.axvline(best_k, color="#ffd700", linestyle="--", alpha=0.7,
                 label=f"Mejor K={best_k}")
     ax2.set_xlabel("K")
-    ax2.set_ylabel("Silhouette Score")
-    ax2.set_title("Silhouette por K")
+    ax2.set_ylabel("Coef. de silueta")
+    ax2.set_title("Silueta por K")
     ax2.set_xticks(ks)
     ax2.legend(facecolor="#1a1a2e", labelcolor="white")
 
@@ -131,9 +142,9 @@ def plot_pca_clusters(X_pca: np.ndarray, labels: np.ndarray, best_k: int,
         mask = labels == k
         ax.scatter(X_pca[mask, 0], X_pca[mask, 1],
                    c=CLUSTER_COLORS[k % len(CLUSTER_COLORS)],
-                   alpha=0.3, s=4, label=f"Cluster {k}")
+                   alpha=0.3, s=4, label=f"Grupo {k}")
         cx, cy = X_pca[mask, 0].mean(), X_pca[mask, 1].mean()
-        ax.text(cx, cy, str(k), fontsize=14, fontweight="bold",
+        ax.text(cx, cy, str(k), fontsize=20, fontweight="bold",
                 color="white", ha="center", va="center",
                 path_effects=[pe.withStroke(linewidth=3, foreground="black")])
 
@@ -164,12 +175,12 @@ def plot_radar(centroids_original: np.ndarray, best_k: int) -> None:
     ax.set_facecolor("#16213e")
     ax.tick_params(colors="white")
     ax.set_xticks(angles[:-1])
-    ax.set_xticklabels(labels_short, color="white", size=9)
+    ax.set_xticklabels(labels_short, color="white", size=15)
     ax.set_yticklabels([], color="white")
     ax.spines["polar"].set_color("#444")
     ax.grid(color="#333", linewidth=0.8)
     ax.set_title("Radar de arquetipos (centroides normalizados)",
-                 color="white", pad=20, size=11)
+                 color="white", pad=20, size=17, fontweight="bold")
 
     # Normalize centroids to 0-1 range for radar
     mins = centroids_original.min(axis=0)
@@ -180,7 +191,7 @@ def plot_radar(centroids_original: np.ndarray, best_k: int) -> None:
     for k in range(best_k):
         vals = normalized[k].tolist() + normalized[k][:1].tolist()
         color = CLUSTER_COLORS[k % len(CLUSTER_COLORS)]
-        ax.plot(angles, vals, "o-", linewidth=2, color=color, label=f"Cluster {k}")
+        ax.plot(angles, vals, "o-", linewidth=2, color=color, label=f"Grupo {k}")
         ax.fill(angles, vals, alpha=0.1, color=color)
 
     ax.legend(loc="upper right", bbox_to_anchor=(1.3, 1.1),

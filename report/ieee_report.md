@@ -1,7 +1,7 @@
 # Aprendizaje Maquinal en Pokémon Showdown: Agrupación, Clasificación y Aprendizaje por Refuerzo
 
-**Gabriel A. Anzola Tachak · Nicolas David Moreno Villanueva**
-Universidad Nacional de Colombia · `ga.anzola15@gmail.com` · `nimorenov@unal.edu.co`
+**Gabriel Andrés Anzola Tachak · Nicolas David Moreno Villanueva**
+Universidad Nacional de Colombia · `ganzola@unal.edu.co` · `nimorenov@unal.edu.co`
 
 ---
 

@@ -17,6 +17,17 @@ from dotenv import load_dotenv
 warnings.filterwarnings("ignore")
 load_dotenv()
 
+# Estilo global de figuras: fuentes grandes para legibilidad en PDF doble columna
+plt.rcParams.update({
+    "font.size": 17,
+    "axes.titlesize": 19,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 17,
+    "xtick.labelsize": 15,
+    "ytick.labelsize": 15,
+    "legend.fontsize": 15,
+})
+
 ROOT = Path(__file__).parent.parent
 PROCESSED = ROOT / "data" / "processed"
 FIGURES = ROOT / "outputs" / "figures"
@@ -94,7 +105,7 @@ def plot_top_pokemon(top: pd.Series) -> None:
     colors = [_ACCENT if i == 0 else _BLUE for i in range(len(top))]
     ax.barh(range(len(top)), top.values[::-1], color=colors[::-1])
     ax.set_yticks(range(len(top)))
-    ax.set_yticklabels(top.index[::-1], color="white", fontsize=9)
+    ax.set_yticklabels(top.index[::-1], color="white", fontsize=13)
     ax.set_xlabel("Apariciones en el dataset")
     ax.set_title(f"Top {len(top)} Pokémon más frecuentes — gen8randombattle")
     plt.tight_layout()
@@ -126,10 +137,10 @@ def plot_rl_learning_curve(log_path: Path) -> None:
     smoothed = pd.Series(win_rates).rolling(window, center=True).mean()
 
     ax1.plot(episodes, win_rates, color=_ACCENT, alpha=0.2, linewidth=1)
-    ax1.plot(episodes, smoothed, color=_ACCENT, linewidth=2.5, label="Win Rate (suavizado)")
-    ax1.axhline(0.5, color="white", linestyle="--", alpha=0.3, label="50% baseline")
+    ax1.plot(episodes, smoothed, color=_ACCENT, linewidth=2.5, label="Tasa de victorias (suavizada)")
+    ax1.axhline(0.5, color="white", linestyle="--", alpha=0.3, label="Línea base 50%")
     ax1.set_xlabel("Episodio", color="white")
-    ax1.set_ylabel("Win Rate (ventana 100)", color=_ACCENT)
+    ax1.set_ylabel("Tasa de victorias (ventana 100)", color=_ACCENT)
     ax1.tick_params(colors="white")
     ax1.set_ylim(0, 1)
     ax1.title.set_color("white")

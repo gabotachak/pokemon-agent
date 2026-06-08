@@ -7,10 +7,10 @@
   ],
   authors: (
     (
-      name: "Gabriel A. Anzola Tachak",
+      name: "Gabriel Andrés Anzola Tachak",
       organization: [Universidad Nacional de Colombia],
       location: [Colombia],
-      email: "ga.anzola15@gmail.com"
+      email: "ganzola@unal.edu.co"
     ),
     (
       name: "Nicolas David Moreno Villanueva",
@@ -52,14 +52,14 @@ A diferencia de estos trabajos, este enfoque combina agrupación no supervisada,
 El corpus HolidayOugi/pokemon-showdown-replays @dataset contiene 31.7 millones de replays. Se seleccionó el formato gen8randombattle (*484,130 batallas*), descargando únicamente los 3 archivos parquet correspondientes para evitar la descarga completa de 66 GB.
 
 #figure(
-  grid(
-    columns: 2,
-    gutter: 4pt,
-    image("../outputs/figures/battle_duration.png"),
-    image("../outputs/figures/top_pokemon.png"),
-  ),
-  caption: [Izq.: duración de batallas en turnos (mayoría entre 15 y 40). Der.: Pokémon más frecuentes — reflejan el pool aleatorio del formato.],
-) <fig-eda>
+  image("../outputs/figures/battle_duration.png"),
+  caption: [Duración de batallas en turnos — la mayoría termina entre 15 y 40.],
+) <fig-duration>
+
+#figure(
+  image("../outputs/figures/top_pokemon.png"),
+  caption: [Pokémon más frecuentes en el corpus — reflejan el pool aleatorio del formato.],
+) <fig-top>
 
 == Análisis del Log y Extracción de Características
 
@@ -108,14 +108,14 @@ Flujo: vectores de equipo (9 características) → normalización → análisis 
 ) <fig-elbow>
 
 #figure(
-  grid(
-    columns: 2,
-    gutter: 4pt,
-    image("../outputs/figures/clusters_pca.png"),
-    image("../outputs/figures/clusters_radar.png"),
-  ),
-  caption: [Proyección PCA coloreada por grupo (izq.) y radar de centroides (der.). Grupo 0: mayor velocidad. Grupo 1: mayor HP y defensa.],
-) <fig-clusters>
+  image("../outputs/figures/clusters_pca.png"),
+  caption: [Proyección PCA coloreada por grupo. Grupo 0: mayor velocidad. Grupo 1: mayor HP y defensa.],
+) <fig-pca>
+
+#figure(
+  image("../outputs/figures/clusters_radar.png"),
+  caption: [Radar de centroides normalizados de cada arquetipo de equipo.],
+) <fig-radar>
 
 *Resultado:* K=2 con silhouette=0.136. El bajo valor es inherente al formato aleatorio — todos los equipos provienen del mismo pool. Aun así, los centroides revelan dos estilos: equipos veloces y ofensivos vs. equipos resistentes y defensivos.
 
@@ -150,14 +150,14 @@ Además de predicciones, XGBoost cuantifica la *importancia* de cada caracterís
 ) <tab-clf>
 
 #figure(
-  grid(
-    columns: 2,
-    gutter: 4pt,
-    image("../outputs/figures/feature_importance.png"),
-    image("../outputs/figures/confusion_matrix.png"),
-  ),
-  caption: [Importancia de características por contribución al conjunto (izq.) y matriz de confusión normalizada (der.)],
-) <fig-clf>
+  image("../outputs/figures/feature_importance.png"),
+  caption: [Importancia de características por contribución al conjunto.],
+) <fig-importance>
+
+#figure(
+  image("../outputs/figures/confusion_matrix.png"),
+  caption: [Matriz de confusión normalizada.],
+) <fig-confusion>
 
 #figure(
   image("../outputs/figures/roc_curves.png"),

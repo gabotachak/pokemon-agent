@@ -21,6 +21,17 @@ from dotenv import load_dotenv
 warnings.filterwarnings("ignore")
 load_dotenv()
 
+# Estilo global de figuras: fuentes grandes para legibilidad en PDF doble columna
+plt.rcParams.update({
+    "font.size": 17,
+    "axes.titlesize": 19,
+    "axes.titleweight": "bold",
+    "axes.labelsize": 17,
+    "xtick.labelsize": 15,
+    "ytick.labelsize": 15,
+    "legend.fontsize": 15,
+})
+
 ROOT = Path(__file__).parent.parent
 PROCESSED = ROOT / "data" / "processed"
 FIGURES = ROOT / "outputs" / "figures"
@@ -123,7 +134,7 @@ def plot_confusion_matrix(y_true, y_pred, classes: list) -> None:
             txt = f"{cm_pct[i,j]:.2f}\n({cm[i,j]:,})"
             color = "white" if cm_pct[i, j] < 0.6 else "black"
             ax.text(j, i, txt, ha="center", va="center",
-                    color=color, fontsize=8)
+                    color=color, fontsize=13)
 
     plt.tight_layout()
     plt.savefig(FIGURES / "confusion_matrix.png", dpi=150, bbox_inches="tight",
@@ -142,9 +153,9 @@ def plot_feature_importance(model: XGBClassifier, feature_names: list) -> None:
     colors = [_ACCENT if v == vals.max() else _BLUE for v in vals]
     bars = ax.barh(range(len(names)), vals[::-1], color=colors[::-1])
     ax.set_yticks(range(len(names)))
-    ax.set_yticklabels(names[::-1], color="white", fontsize=9)
-    ax.set_xlabel("Importancia (gain)")
-    ax.set_title("Feature Importance — XGBoost")
+    ax.set_yticklabels(names[::-1], color="white", fontsize=14)
+    ax.set_xlabel("Importancia (ganancia)")
+    ax.set_title("Importancia de características — XGBoost")
     ax.axvline(vals.mean(), color=_GOLD, linestyle="--", alpha=0.6, label="Promedio")
     ax.legend(facecolor=_DARK, labelcolor="white")
 
@@ -166,8 +177,8 @@ def plot_roc_curves(y_test_bin, y_prob, classes: list) -> None:
                 linewidth=2, label=f"{cls} (AUC={auc:.3f})")
 
     ax.plot([0, 1], [0, 1], "w--", alpha=0.4)
-    ax.set_xlabel("False Positive Rate")
-    ax.set_ylabel("True Positive Rate")
+    ax.set_xlabel("Tasa de falsos positivos")
+    ax.set_ylabel("Tasa de verdaderos positivos")
     ax.set_title("Curvas ROC — Clasificación multiclase (OvR)")
     ax.legend(facecolor=_DARK, labelcolor="white")
 
