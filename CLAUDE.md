@@ -62,12 +62,12 @@ HF_TOKEN=hf_...   # https://huggingface.co/settings/tokens (Read role)
 
 - [x] `src/00_setup.py` — instala deps, clona Showdown, crea carpetas
 - [x] `src/01_download.py` — descarga `gen8rb.parquet` y `pokemon_stats.csv`
-- [ ] `src/02_preprocess.py` — feature engineering → `battles_featured.parquet`
-- [ ] `src/03_clustering.py` — K-Means arquetipos de equipo
-- [ ] `src/04_classification.py` — XGBoost predicción de acción ganadora
-- [ ] `src/05_train_agent.py` — Q-Learning agent (QLearningPlayer + entrenamiento)
-- [ ] `src/06_dashboard.py` — FastAPI dashboard en tiempo real
-- [ ] `src/07_report_figures.py` — figuras finales para el informe
+- [x] `src/02_preprocess.py` — feature engineering → `battles_featured.parquet`
+- [x] `src/03_clustering.py` — K-Means arquetipos de equipo
+- [x] `src/04_classification.py` — XGBoost predicción de acción ganadora (CUDA)
+- [x] `src/05_train_agent.py` — Q-Learning agent (QLearningPlayer + entrenamiento)
+- [x] `src/06_dashboard.py` — FastAPI dashboard en tiempo real
+- [x] `src/07_report_figures.py` — figuras finales para el informe
 - [ ] `report/ieee_report.md` — informe IEEE doble columna (máx 6 páginas)
 
 ## Architecture
@@ -120,6 +120,12 @@ Output: `data/processed/battles_featured.parquet`.
 ## Clustering spec (`src/03_clustering.py`)
 
 Team vectors (duplicate rows per battle): `avg_hp`, `avg_attack`, `avg_defense`, `avg_sp_attack`, `avg_sp_defense`, `avg_speed`, `type_diversity`, `n_fast_pokemon`, `type_coverage`. StandardScaler → PCA(2) → K-Means elbow K=2..10. Figures: `elbow_curve.png`, `clusters_pca.png`, `clusters_radar.png`. Save `outputs/models/kmeans.pkl` and clustering metrics to `outputs/metrics.json`.
+
+## GPU
+
+RTX 3060 12GB disponible. Solo XGBoost usa GPU. No instalar RAPIDS/cuDF — complejidad no justificada para esta escala. Log parsing usa multiprocessing CPU (string ops, GPU no ayuda). K-Means en CPU es suficientemente rápido para 484k×9.
+
+**Política de fallback GPU (obligatoria en todos los scripts):** intentar `device='cuda'` primero; si `torch.cuda.is_available()` retorna False o XGBoost lanza error, reintentar con `device='cpu'` automáticamente sin interrumpir ejecución. El script debe imprimir claramente cuál device usó.
 
 ## Classification spec (`src/04_classification.py`)
 

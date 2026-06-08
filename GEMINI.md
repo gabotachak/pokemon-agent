@@ -79,6 +79,8 @@ FastAPI dashboard (src/06_dashboard.py, port 9000)
 
 **Reward shaping:** +1.5 damage dealt, -1.0 damage taken without dealing, ±0.5 for switch quality, ±10 win/loss.
 
+**GPU:** RTX 3060 12GB. Solo XGBoost usa `device='cuda'` con fallback automático a `device='cpu'` si CUDA no está disponible o falla. No instalar RAPIDS. Log parsing y K-Means quedan en CPU. Siempre imprimir qué device se usó.
+
 **Hyperparameters:** lr=0.1, gamma=0.9, epsilon 1.0→0.05 over 1500 of 2000 episodes, `random_state=42` everywhere.
 
 **Dataset:** HolidayOugi/pokemon-showdown-replays, filtrado a `gen8randombattle` al descargar → `data/raw/gen8rb.parquet` (~107k batallas humanas reales). No bajar dataset completo (66.8 GB).
