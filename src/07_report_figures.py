@@ -4,7 +4,6 @@ Genera (si no existen ya):
   - battle_duration.png     histograma duración de batallas
   - top_pokemon.png         Pokémon más frecuentes en el dataset
   - rl_learning_curve.png   curva de aprendizaje del agente
-  - model_comparison.png    tabla comparativa de las 3 técnicas
 """
 
 import json
@@ -12,7 +11,6 @@ import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -157,67 +155,6 @@ def plot_rl_learning_curve(log_path: Path) -> None:
     print("  ✓ rl_learning_curve.png")
 
 
-# ── Model comparison table ───────────────────────────────────────────────────
-
-
-def plot_model_comparison(metrics: dict) -> None:
-    clus = metrics.get("clustering", {})
-    clf = metrics.get("classification", {})
-    rl = metrics.get("rl", {})
-
-    rows = [
-        ["Técnica",       "K-Means",                 "XGBoost",                    "Q-Learning"],
-        ["Tipo",          "Agrupación",              "Clasificación",              "Refuerzo"],
-        ["Datos",         "484k equipos",            "484k batallas",              "2000 episodios"],
-        ["Métrica principal",
-                          f"Silhouette={clus.get('silhouettes', [0])[0]:.3f}",
-                          f"Accuracy={clf.get('accuracy', 0):.1%}",
-                          f"Win Rate={rl.get('final_win_rate', '—')}"],
-        ["Resultado",
-                          f"K={clus.get('best_k', '?')} clusters",
-                          f"F1={clf.get('weighted_f1', 0):.3f}",
-                          f"{rl.get('q_states', '—')} Q-states"],
-        ["Device",        "CPU",
-                          clf.get("device", "cpu").upper(),
-                          "CPU"],
-    ]
-
-    fig, ax = plt.subplots(figsize=(12, 4))
-    fig.patch.set_facecolor(_DARK)
-    ax.set_facecolor(_DARK)
-    ax.axis("off")
-
-    col_colors = [_MID] + [_MID] * (len(rows[0]) - 1)
-    header_colors = [[_ACCENT if i == 0 else "#0f3460" for i in range(len(rows[0]))]]
-    cell_colors = [["#16213e" if j % 2 == 0 else "#1a2744"
-                    for _ in range(len(rows[0]))]
-                   for j in range(len(rows) - 1)]
-
-    table = ax.table(
-        cellText=rows[1:],
-        colLabels=rows[0],
-        cellLoc="center",
-        loc="center",
-        cellColours=cell_colors,
-        colColours=["#0f3460"] * len(rows[0]),
-    )
-    table.auto_set_font_size(False)
-    table.set_fontsize(9)
-    table.scale(1, 1.8)
-
-    for (row, col), cell in table.get_celld().items():
-        cell.set_edgecolor("#0f3460")
-        cell.set_text_props(color="white")
-
-    ax.set_title("Comparativa de las 3 Técnicas de ML", color="white",
-                 fontsize=12, pad=10)
-    plt.tight_layout()
-    plt.savefig(FIGURES / "model_comparison.png", dpi=150, bbox_inches="tight",
-                facecolor=fig.get_facecolor())
-    plt.close()
-    print("  ✓ model_comparison.png")
-
-
 # ── Main ─────────────────────────────────────────────────────────────────────
 
 
@@ -231,19 +168,19 @@ def main() -> None:
         with open(METRICS_FILE) as f:
             metrics = json.load(f)
 
-    section("1/4  Duración de batallas")
+    section("1/3  Duración de batallas")
     df = pd.read_parquet(PROCESSED / "battles_featured.parquet")
     plot_battle_duration(df)
     print(f"  n_turns: mediana={df['n_turns'].median():.0f}, "
           f"media={df['n_turns'].mean():.1f}, p95={df['n_turns'].quantile(.95):.0f}")
 
-    section("2/4  Top Pokémon")
+    section("2/3  Top Pokémon")
     raw_parquet = ROOT / "data" / "raw" / "gen8rb.parquet"
     top = _extract_top_pokemon(raw_parquet, n=20)
     plot_top_pokemon(top)
     print(f"  Top 3: {', '.join(top.head(3).index.tolist())}")
 
-    section("3/4  Curva de aprendizaje RL")
+    section("3/3  Curva de aprendizaje RL")
     log_path = MODELS / "training_log.json"
     if log_path.exists():
         plot_rl_learning_curve(log_path)
@@ -262,9 +199,6 @@ def main() -> None:
         print(f"  Win rate final: {final_wr:.1%} | Q-states: {q_states:,}")
     else:
         print("  ⚠ training_log.json no encontrado — correr 05_train_agent.py primero")
-
-    section("4/4  Tabla comparativa")
-    plot_model_comparison(metrics)
 
     print(f"\n{'─' * 50}")
     print("  Figuras completas.")

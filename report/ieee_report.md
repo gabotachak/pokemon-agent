@@ -45,7 +45,10 @@ A diferencia de estos trabajos, este pipeline combina agrupación no supervisada
 
 El corpus HolidayOugi/pokemon-showdown-replays [2] contiene 31.7 millones de replays de Pokémon Showdown. Se seleccionó el formato gen8randombattle (**484,130 batallas**), descargando únicamente los 3 archivos parquet correspondientes para evitar la descarga completa de 66 GB. Cada registro incluye metadatos de la partida y el campo `log` con el transcript completo del combate.
 
-![Fig. 1](../outputs/figures/battle_duration.png)
+<table><tr>
+<td><img src="../outputs/figures/battle_duration.png" width="100%"></td>
+<td><img src="../outputs/figures/top_pokemon.png" width="100%"></td>
+</tr></table>
 
 *Fig. 1: Izq.: duración de batallas en turnos (la mayoría termina entre 15 y 40 turnos). Der.: Pokémon más frecuentes en el corpus — reflejan el pool aleatorio del formato.*
 
@@ -92,7 +95,10 @@ Pipeline: vectores de equipo (9 features) → normalización → análisis de co
 
 *Fig. 2: Inercia y silhouette score para K=2..10. El máximo de silhouette ocurre en K=2.*
 
-![Fig. 3](../outputs/figures/clusters_pca.png)
+<table><tr>
+<td><img src="../outputs/figures/clusters_pca.png" width="100%"></td>
+<td><img src="../outputs/figures/clusters_radar.png" width="100%"></td>
+</tr></table>
 
 *Fig. 3: Proyección PCA coloreada por grupo (izq.) y radar de centroides (der.). Grupo 0: mayor velocidad. Grupo 1: mayor HP y defensa.*
 
@@ -126,7 +132,10 @@ Además de predicciones, XGBoost cuantifica la **importancia** de cada feature: 
 
 *Tabla 2: Métricas por clase. Exactitud global: 64.0% (baseline: 54% prediciendo siempre la clase mayoritaria). El área bajo la curva ROC (AUC-ROC) mide la capacidad discriminativa: 1.0 es perfecto, 0.5 equivale a clasificación aleatoria.*
 
-![Fig. 4](../outputs/figures/feature_importance.png)
+<table><tr>
+<td><img src="../outputs/figures/feature_importance.png" width="100%"></td>
+<td><img src="../outputs/figures/confusion_matrix.png" width="100%"></td>
+</tr></table>
 
 *Fig. 4: Importancia de features por contribución al ensemble (izq.) y matriz de confusión normalizada (der.).*
 
@@ -158,9 +167,10 @@ El término $r + \gamma \max_{a'} Q(s', a')$ combina la recompensa inmediata $r$
 | `type_advantage` | {−1, 0, +1} | Feature discriminante en XGBoost |
 | `can_outspeed` | booleano | Derivada de `speed_advantage_ratio` — top feature |
 | `team_size_self/opp` | 1-6 | Tamaño de equipo diferencia arquetipos K-Means |
+| `n_available_moves` | 1-4 | Estructura del espacio de acción |
 | `has_switch` | booleano | `switch_rate` fue feature relevante en el corpus |
 
-*Tabla 3: Variables de estado del agente y su origen en el análisis previo.*
+*Tabla 3: Variables de estado del agente y su origen en el análisis previo. Su producto cartesiano define 27,648 estados teóricos.*
 
 El agente juega contra un **RandomPlayer** — oponente que elige acciones uniformemente al azar. Sirve como línea base para verificar que el agente aprende algo.
 
@@ -188,9 +198,18 @@ El agente juega contra un **RandomPlayer** — oponente que elige acciones unifo
 
 **Limitaciones:** el 76.6% es contra RandomPlayer y no generaliza a oponentes más fuertes. Q-Learning tabular no escala a estados continuos.
 
-![Fig. 7](../outputs/figures/model_comparison.png)
+**Comparativa de las tres técnicas:** las tres responden preguntas distintas y no compiten entre sí (Tabla 4). K-Means y XGBoost extraen conocimiento *descriptivo* y *predictivo* directamente del corpus histórico; Q-Learning produce conocimiento *procedimental* — una política de juego — interactuando con el entorno en vivo. K-Means y Q-Learning ofrecen alta interpretabilidad (centroides legibles, tabla Q inspeccionable), mientras XGBoost sacrifica transparencia por capacidad predictiva. La complementariedad es la clave del pipeline: la salida descriptiva de las dos primeras define el espacio de estados de la tercera.
 
-*Fig. 7: Comparativa de las tres técnicas.*
+| Dimensión | K-Means | XGBoost | Q-Learning |
+|-----------|---------|---------|------------|
+| Paradigma | No superv. | Supervisado | Refuerzo |
+| Entrada | Vectores de equipo | Features de batalla | Estado en vivo |
+| Conocimiento | Arquetipos | Features predictivas | Política de juego |
+| Métrica | Silhouette 0.136 | Exactitud 64.0% | Win rate 76.6% |
+| Interpretab. | Alta | Media | Alta |
+| Uso del dataset | Directo | Directo | Indirecto |
+
+*Tabla 4: Comparativa de las tres técnicas según paradigma, entrada, conocimiento extraído, métrica e interpretabilidad.*
 
 ---
 
@@ -202,9 +221,7 @@ El agente juega contra un **RandomPlayer** — oponente que elige acciones unifo
 
 La cadena K-Means → XGBoost → Q-Learning demuestra que la agrupación no supervisada y la clasificación supervisada pueden informar directamente el diseño de un agente de refuerzo. La tabla Q inspeccionable permite verificar comportamientos tácticamente coherentes: cambiar de Pokémon ante desventaja de tipo, atacar agresivamente cuando se puede actuar primero.
 
-Trabajo futuro: reemplazar la tabla Q por un DQN para manejar estados continuos, entrenar contra un oponente más fuerte, y analizar la tabla Q para extraer reglas de juego en lenguaje natural.
-
-El código fuente está disponible en: https://github.com/gabotachak/pokemon-agent
+Trabajo futuro: reemplazar la tabla Q por un DQN para manejar estados continuos, entrenar contra un oponente más fuerte, y analizar la tabla Q para extraer reglas de juego en lenguaje natural. Código: https://github.com/gabotachak/pokemon-agent
 
 ---
 

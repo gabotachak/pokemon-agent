@@ -189,9 +189,10 @@ El término $r + gamma max_(a') Q(s', a')$ combina la recompensa inmediata $r$ c
     [`type_advantage`], [{-1,0,+1}], [Feature discriminante en XGBoost],
     [`can_outspeed`], [booleano], [Derivada de `speed_advantage_ratio` — top feature],
     [`team_size_self/opp`], [1-6], [Tamaño de equipo diferencia arquetipos K-Means],
+    [`n_available_moves`], [1-4], [Estructura del espacio de acción],
     [`has_switch`], [booleano], [`switch_rate` fue feature relevante en el corpus],
   ),
-  caption: [Variables de estado del agente y su origen en el análisis previo.],
+  caption: [Variables de estado del agente y su origen en el análisis previo. Su producto cartesiano define 27,648 estados teóricos.],
 ) <tab-states>
 
 El agente juega contra un *RandomPlayer* — oponente que elige acciones uniformemente al azar, sin considerar el estado del combate. Sirve como línea base para verificar que el agente aprende algo.
@@ -219,10 +220,22 @@ El agente juega contra un *RandomPlayer* — oponente que elige acciones uniform
 
 *Limitaciones:* el 76.6% es contra RandomPlayer y no generaliza a oponentes más fuertes. Q-Learning tabular no escala a estados continuos.
 
+*Comparativa de las tres técnicas:* las tres responden preguntas distintas y no compiten entre sí (Tabla 4). K-Means y XGBoost extraen conocimiento _descriptivo_ y _predictivo_ directamente del corpus histórico; Q-Learning produce conocimiento _procedimental_ — una política de juego — interactuando con el entorno en vivo. K-Means y Q-Learning ofrecen alta interpretabilidad (centroides legibles, tabla Q inspeccionable), mientras XGBoost sacrifica transparencia por capacidad predictiva. La complementariedad es la clave del pipeline: la salida descriptiva de las dos primeras define el espacio de estados de la tercera.
+
 #figure(
-  image("../outputs/figures/model_comparison.png"),
-  caption: [Comparativa de las tres técnicas.],
-) <fig-comparison>
+  table(
+    columns: (auto, auto, auto, auto),
+    stroke: 0.5pt,
+    table.header([*Dimensión*], [*K-Means*], [*XGBoost*], [*Q-Learning*]),
+    [Paradigma], [No superv.], [Supervisado], [Refuerzo],
+    [Entrada], [Vectores de equipo], [Features de batalla], [Estado en vivo],
+    [Conocimiento], [Arquetipos], [Features predictivas], [Política de juego],
+    [Métrica], [Silhouette 0.136], [Exactitud 64.0%], [Win rate 76.6%],
+    [Interpretab.], [Alta], [Media], [Alta],
+    [Uso del dataset], [Directo], [Directo], [Indirecto],
+  ),
+  caption: [Comparativa de las tres técnicas según paradigma, entrada, conocimiento extraído, métrica e interpretabilidad.],
+) <tab-comparison>
 
 = Conclusiones
 
