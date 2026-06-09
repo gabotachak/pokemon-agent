@@ -108,26 +108,37 @@ def encode_state(battle) -> tuple:
         except Exception:
             can_outspeed = 0
 
-    team_size_self = max(1, sum(
-        1 for p in battle.team.values() if not p.fainted
-    ))
-    team_size_opp = max(1, sum(
-        1 for p in battle.opponent_team.values() if not p.fainted
-    ))
+    team_size_self = max(1, sum(1 for p in battle.team.values() if not p.fainted))
+    team_size_opp = max(
+        1, sum(1 for p in battle.opponent_team.values() if not p.fainted)
+    )
 
     available_moves = battle.available_moves
     n_moves = max(1, min(4, len(available_moves)))
     has_switch = int(len(battle.available_switches) > 0)
 
-    return (hp_self, hp_opp, type_adv, can_outspeed,
-            team_size_self, team_size_opp, n_moves, has_switch)
+    return (
+        hp_self,
+        hp_opp,
+        type_adv,
+        can_outspeed,
+        team_size_self,
+        team_size_opp,
+        n_moves,
+        has_switch,
+    )
 
 
 # ── Reward shaping ───────────────────────────────────────────────────────────
 
 
-def compute_reward(battle, prev_hp_self: float, prev_hp_opp: float,
-                   action_was_switch: bool, prev_type_adv: int) -> float:
+def compute_reward(
+    battle,
+    prev_hp_self: float,
+    prev_hp_opp: float,
+    action_was_switch: bool,
+    prev_type_adv: int,
+) -> float:
     reward = 0.0
 
     active = battle.active_pokemon
@@ -226,8 +237,8 @@ class QLearningPlayer(Player):
     def _update_q(self, state, action: int, reward: float, next_state) -> None:
         current_q = self.q_table[state][action]
         next_max = np.max(self.q_table[next_state])
-        self.q_table[state][action] = (
-            current_q + LR * (reward + GAMMA * next_max - current_q)
+        self.q_table[state][action] = current_q + LR * (
+            reward + GAMMA * next_max - current_q
         )
 
     def battle_finished_callback(self, battle) -> None:
@@ -236,8 +247,9 @@ class QLearningPlayer(Player):
             return
         terminal_reward = 10.0 if battle.won else -10.0
         terminal_state = encode_state(battle)
-        self._update_q(self._prev_state, self._prev_action,
-                       terminal_reward, terminal_state)
+        self._update_q(
+            self._prev_state, self._prev_action, terminal_reward, terminal_state
+        )
         self._prev_state = None
         self._prev_action = None
 
@@ -252,15 +264,20 @@ def epsilon_schedule(episode: int) -> float:
     return EPSILON_START + t * (EPSILON_END - EPSILON_START)
 
 
-def post_checkpoint(episode: int, win_rate: float, avg_reward: float,
-                    epsilon: float) -> None:
+def post_checkpoint(
+    episode: int, win_rate: float, avg_reward: float, epsilon: float
+) -> None:
     try:
-        requests.post(DASHBOARD_URL, json={
-            "episode": episode,
-            "win_rate": win_rate,
-            "avg_reward": avg_reward,
-            "epsilon": epsilon,
-        }, timeout=1)
+        requests.post(
+            DASHBOARD_URL,
+            json={
+                "episode": episode,
+                "win_rate": win_rate,
+                "avg_reward": avg_reward,
+                "epsilon": epsilon,
+            },
+            timeout=1,
+        )
     except Exception:
         pass
 
@@ -310,23 +327,36 @@ async def train() -> None:
 
         if episode % 50 == 0:
             post_checkpoint(episode, win_rate, avg_reward, agent.epsilon)
-            print(f"  Ep {episode:>5}/{TOTAL_EPISODES} | "
-                  f"WR(last {WINDOW}): {win_rate:.1%} | "
-                  f"ε: {agent.epsilon:.3f} | "
-                  f"Q-states: {len(agent.q_table):,}")
+            print(
+                f"  Ep {episode:>5}/{TOTAL_EPISODES} | "
+                f"WR(last {WINDOW}): {win_rate:.1%} | "
+                f"ε: {agent.epsilon:.3f} | "
+                f"Q-states: {len(agent.q_table):,}"
+            )
 
     print("\n  ─── Entrenamiento completo ───")
     final_wr = sum(wins_window) / len(wins_window)
     print(f"  Win rate final (last {WINDOW}): {final_wr:.1%}")
     print(f"  Q-states aprendidos: {len(agent.q_table):,}")
 
-    with open(MODELS / "qtable.pkl", "wb") as f:
+    qtable_path = MODELS / "qtable.pkl"
+    with open(qtable_path, "wb") as f:
         pickle.dump(dict(agent.q_table), f)
-    print("  ✓ qtable.pkl")
+        f.flush()
+        f.flush()  # doble flush por si hay buffer del SO
+    qtable_size = qtable_path.stat().st_size
+    if qtable_size == 0:
+        raise RuntimeError("qtable.pkl se guardó vacío — abortando")
+    print(
+        f"  ✓ qtable.pkl  ({qtable_size / 1024:.1f} KB, {len(agent.q_table):,} estados)"
+    )
 
     with open(MODELS / "training_log.json", "w") as f:
         json.dump(training_log, f, indent=2)
-    print("  ✓ training_log.json")
+        f.flush()
+    print(
+        f"  ✓ training_log.json  ({(MODELS / 'training_log.json').stat().st_size / 1024:.1f} KB)"
+    )
 
     print(f"\n  Siguiente paso: uv run python src/07_report_figures.py\n")
 
