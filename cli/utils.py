@@ -16,7 +16,7 @@ from pathlib import Path
 from poke_env import Player, RandomPlayer
 
 # ── Configuración ──────────────────────────────────────────────
-EXAMPLES_DIR = Path(__file__).parent.parent / "examples"
+EXAMPLES_DIR = Path(__file__).parent.parent / "agents"
 BASE_CLASSES = (Player, RandomPlayer)
 
 # Excluidos por defecto (scripts de infraestructura, no agentes)

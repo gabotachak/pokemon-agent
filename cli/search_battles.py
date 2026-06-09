@@ -11,7 +11,7 @@ Uso:
     cd showdown && node pokemon-showdown start --no-security
 
     # Terminal B — este script
-    python cli/search_battles.py
+    python -m cli.search_battles
 """
 
 import asyncio
@@ -20,7 +20,7 @@ from poke_env import (
     ShowdownServerConfiguration,
     AccountConfiguration,
 )
-from utils import (
+from cli.utils import (
     ask_int,
     ask_yes_no,
     discover_agents,

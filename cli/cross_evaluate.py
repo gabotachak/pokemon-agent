@@ -12,11 +12,11 @@ Uso:
     cd showdown && node pokemon-showdown start --no-security
 
     # Terminal B — este script
-    python cli/accept_battles.py
+    python -m cli.cross_evaluate
 """
 
 import asyncio
-from utils import ask_agents, ask_int, discover_agents, print_title
+from cli.utils import ask_agents, ask_int, discover_agents, print_title
 
 
 async def cross_evaluate_manual(players, n_challenges=10):
