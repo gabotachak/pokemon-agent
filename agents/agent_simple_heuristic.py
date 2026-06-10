@@ -1,7 +1,7 @@
 from poke_env.player import Player
 
 
-class AgentGemini(Player):
+class AgentSimpleHeuristic(Player):
     def choose_move(self, battle):
         # 1. Si no hay movimientos disponibles, cambia al mejor Pokémon disponible
         if not battle.available_moves:

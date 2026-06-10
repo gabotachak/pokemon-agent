@@ -109,6 +109,7 @@ flowchart TD
 - Python 3.11+
 - Node.js
 - [`uv`](https://docs.astral.sh/uv/)
+- **Linux (GUI):** `libwebkit2gtk-4.1-dev` (necesario para PyWebView; en Ubuntu/Debian: `sudo apt install libwebkit2gtk-4.1-dev`)
 
 ### Setup inicial (una sola vez)
 
@@ -119,6 +120,16 @@ uv run python src/00_setup.py
 uv run python src/01_download.py
 uv run python src/02_preprocess.py
 ```
+
+### GUI (Interfaz gráfica)
+
+```bash
+# Requiere libwebkit2gtk-4.1-dev instalado (ver Requisitos)
+uv run python -m gui
+```
+
+La GUI replica el diseño de `gui/index.html` con navegación por pantallas:
+setup (credenciales) → home (3 modos) → formulario → ejecución → resultados.
 
 ### Pipeline ML
 
@@ -186,6 +197,11 @@ pokemon-agent/
 │   ├── figures/                 # gráficas generadas
 │   ├── models/                  # modelos .pkl (gitignored) + training_log.json
 │   └── metrics.json             # métricas unificadas de los 3 modelos
+├── gui/
+│   ├── app.py                   # PyWebView Api bridge (Python ↔ JS)
+│   ├── __main__.py              # entry point: python -m gui
+│   ├── index.html               # frontend (Tailwind + Lucide)
+│   └── assets/                  # bundles locales (offline-ready)
 └── report/
     ├── ieee_report.md           # informe master (edición manual)
     ├── ieee_report.typ          # fuente typst — formato IEEE doble columna

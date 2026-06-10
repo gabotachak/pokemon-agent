@@ -16,10 +16,17 @@ Uso:
 """
 
 import asyncio
+import json
 from cli.utils import ask_agents, ask_int, discover_agents, print_title
 
 
-async def cross_evaluate_manual(players, n_challenges=10):
+async def cross_evaluate_manual(
+    players,
+    n_challenges=10,
+    on_log=print,
+    on_progress=lambda pct, s: print(f"{pct}% {s}"),
+    on_result=lambda d: print(json.dumps(d, indent=2)),
+):
     results = {p.username: {} for p in players}
     total = (len(players) * (len(players) - 1)) // 2
     current = 0
@@ -33,7 +40,8 @@ async def cross_evaluate_manual(players, n_challenges=10):
             p2.reset_battles()
             label = f"{p1.username} vs {p2.username}"
 
-            print(f"  [{current}/{total}] " f"{label} " f"({n_challenges} battles)...")
+            on_log(f"  [{current}/{total}] {label} ({n_challenges} battles)...")
+            on_progress(int(current / total * 100), label)
             await p1.battle_against(
                 p2,
                 n_battles=n_challenges,
@@ -41,6 +49,8 @@ async def cross_evaluate_manual(players, n_challenges=10):
             results[p1.username][p2.username] = p1.win_rate
             results[p2.username][p1.username] = p2.win_rate
 
+    on_progress(100, "Completado")
+    on_result(results)
     return results
 
 

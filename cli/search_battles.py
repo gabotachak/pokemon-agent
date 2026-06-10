@@ -15,6 +15,7 @@ Uso:
 """
 
 import asyncio
+import json
 from poke_env import (
     LocalhostServerConfiguration,
     ShowdownServerConfiguration,
@@ -30,16 +31,28 @@ from cli.utils import (
 )
 
 
-async def search_battles(player, n_games):
+async def search_battles(
+    player,
+    n_games,
+    on_log=print,
+    on_progress=lambda pct, status: print(f"{pct}% {status}"),
+    on_result=lambda d: print(json.dumps(d, indent=2)),
+):
     await player.ladder(n_games)
 
     if player.n_finished_battles > 0:
         wr = player.win_rate
-        print(f"\n  {'─' * 40}")
-        print(
+        on_log(f"\n  {'─' * 40}")
+        on_log(
             f"  Final: {player.n_won_battles}W / {player.n_lost_battles}L  ({wr:.1%})"
         )
-        print(f"  {'─' * 40}")
+        on_log(f"  {'─' * 40}")
+        on_progress(100, "Completado")
+        on_result({
+            "wins": player.n_won_battles,
+            "losses": player.n_lost_battles,
+            "wr": round(wr * 100, 1),
+        })
 
 
 async def main():

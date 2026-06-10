@@ -7,6 +7,7 @@ y usa greedy inference (epsilon=0) para elegir movimientos.
 
 import pickle
 import random
+import asyncio
 from pathlib import Path
 
 import numpy as np
@@ -110,6 +111,40 @@ def encode_state(battle) -> tuple:
 
 
 class AgentQTable(Player):
+    # Banco de frases para cuando derroto un Pokémon rival
+    CHAT_KILL_MESSAGES = [
+        "A mimir, que ya es tarde 😴",
+        "Uy, ¿te dolió?",
+        "Besitos al cielo para tu Pokémon 😘🕊️",
+        "¿Seguro que tienes el control conectado?",
+        "Un pasaje de ida al Centro Pokémon, por favor XD",
+        "Ni la Enfermera Joy te arregla eso jajaja",
+        "¿Ese era tu mejor Pokémon? Qué ternura... 🫣🗑️",
+        "Fácil, sencillito y para toda la familia!",
+        "Limpiando la basura del campo de batalla 🧹",
+        "Siguiente víctima, por favor 🎟️🗣️",
+        "¿Querías ganar? Haber estudiado 📚🤓",
+        "¿Eso es estrategia o le diste cabezazos al teclado? ⌨️🤕",
+        "Te falta calle... y un mejor equipo de paso 🚶‍♂️🧢",
+        "Ups, creo que se me resbaló el dedo y te humillé 🤭💅",
+    ]
+
+    # Banco de frases para cuando me derrotan un Pokémon
+    CHAT_DEATH_MESSAGES = [
+        "Tranquilo, te dejé ganar esta para que no llores 🍼👶",
+        "¡Milagro! Al fin le atinas a una 🎉🐢",
+        "Disfruta tu minutito de gloria, que no te va a durar ⏱️🤭",
+        "Anotado en mi disco duro: 'El rival tuvo mucha suerte hoy' 🍀",
+        "Felicidades, por fin encontraste el botón de atacar 🥳👏",
+        "Sacrificio estratégico xd",
+        "No te acostumbres, fue pura caridad mía 🤝",
+        "Me dejé pegar para darle emoción a la partida 🍿",
+        "Cayó con honor, no como tus estrategias raras 🙄",
+        "No te emociones 🤡",
+        "Solo te di ventaja para que el final sea más humillante XD",
+        "Puro RNG, a ver si juegas a la lotería hoy 🎰",
+    ]
+
     def __init__(self, qtable_path: str | Path | None = None, **kwargs):
         super().__init__(**kwargs)
 
@@ -125,7 +160,52 @@ class AgentQTable(Player):
 
         self.epsilon = 0.0
 
+        # Historial de IDs de Pokémon debilitados para evitar mensajes duplicados
+        self._fainted_self_tracked = {}
+        self._fainted_opp_tracked = {}
+
+    async def _send_chat(self, battle, message: str):
+        try:
+            await self.ps_client.send_message(message, battle.battle_tag)
+        except Exception as e:
+            print("CHAT ERROR:", e)
+
     def choose_move(self, battle):
+        # --- LÓGICA DEL CHAT ROBUSTA ---
+        # Inicializamos los sets para esta batalla si no existen
+        if battle.battle_tag not in self._fainted_self_tracked:
+            self._fainted_self_tracked[battle.battle_tag] = set()
+            self._fainted_opp_tracked[battle.battle_tag] = set()
+
+        # Obtenemos los identificadores únicos de los Pokémon actualmente debilitados
+        current_fainted_self = {idx for idx, p in battle.team.items() if p.fainted}
+        current_fainted_opp = {
+            idx for idx, p in battle.opponent_team.items() if p.fainted
+        }
+
+        # Comparamos usando la diferencia de conjuntos (qué hay de nuevo respecto a lo ya guardado)
+        new_fainted_self = (
+            current_fainted_self - self._fainted_self_tracked[battle.battle_tag]
+        )
+        new_fainted_opp = (
+            current_fainted_opp - self._fainted_opp_tracked[battle.battle_tag]
+        )
+
+        # Si hay NUEVOS Pokémon propios debilitados
+        if new_fainted_self:
+            asyncio.create_task(
+                self._send_chat(battle, random.choice(self.CHAT_DEATH_MESSAGES))
+            )
+            self._fainted_self_tracked[battle.battle_tag].update(new_fainted_self)
+
+        # Si hay NUEVOS Pokémon rivales debilitados
+        if new_fainted_opp:
+            asyncio.create_task(
+                self._send_chat(battle, random.choice(self.CHAT_KILL_MESSAGES))
+            )
+            self._fainted_opp_tracked[battle.battle_tag].update(new_fainted_opp)
+        # -------------------------------
+
         state = encode_state(battle)
         if state in self.q_table:
             action = int(np.argmax(self.q_table[state]))

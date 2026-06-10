@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PokemonAgent UI - Pro v1.1</title>
+    <script src="assets/tailwind.min.js"></script>
+    <script src="assets/lucide.min.js"></script>
+    <script>
+      function api() {
+        try {
+          return window.pywebview ? window.pywebview.api : null
+        } catch (e) {
+          return null
+        }
+      }
+    </script>
+    <style>
+      /* Estilo para scrollbar fino en logs */
+      .scrollbar-thin::-webkit-scrollbar {
+        width: 4px;
+      }
+      .scrollbar-thin::-webkit-scrollbar-track {
+        background: #0f172a;
+      }
+      .scrollbar-thin::-webkit-scrollbar-thumb {
+        background: #334155;
+        border-radius: 2px;
+      }
+
+      /* Animación de entrada */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.4s ease-out forwards;
+      }
+
+      /* Estilo para los checkboxes personalizados de agentes */
+      .agent-checkbox:checked + gap-4 {
+        border-color: #a855f7; /* purple-500 */
+        background-color: #1e1b4b; /* indigo-950 */
+      }
+    </style>
+  </head>
+  <body
+    class="bg-slate-900 text-slate-100 flex font-sans selection:bg-rose-500 selection:text-white"
+  >
+    <main class="w-full overflow-hidden relative transition-all duration-300">
+      <div
+        class="px-6 py-4 bg-slate-850 border-b border-slate-800 flex justify-between items-center"
+      >
+        <div class="flex items-center gap-2"></div>
+        <button
+          id="btn-global-config"
+          onclick="showScreen('setup-screen')"
+          class="text-slate-400 hover:text-rose-400 transition-colors hidden"
+        >
+          <i data-lucide="settings" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6">
+        <section id="setup-screen" class="space-y-5">
+          <div class="text-center space-y-1">
+            <h2
+              class="text-xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-rose-400 to-orange-400"
+            >
+              Configuración Showdown
+            </h2>
+            <p class="text-xs text-slate-400">
+              Credenciales necesarias para el servidor oficial.
+            </p>
+          </div>
+          <div class="space-y-4">
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5"
+                >Usuario</label
+              >
+              <input
+                type="text"
+                id="showdown-user"
+                placeholder="Ej. AshKetchum99"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500 transition-colors"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5"
+                >Contraseña</label
+              >
+              <input
+                type="password"
+                id="showdown-pass"
+                placeholder="••••••••"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500"
+              />
+            </div>
+            <button
+              onclick="saveInitialConfig()"
+              class="w-full bg-gradient-to-r from-rose-600 to-orange-600 hover:from-rose-500 hover:to-orange-500 text-white font-medium py-3 rounded-xl transition-all shadow-lg shadow-rose-950/20 text-sm flex items-center justify-center gap-2 mt-2"
+            >
+              <i data-lucide="save" class="w-4 h-4"></i> Guardar y Continuar
+            </button>
+          </div>
+        </section>
+
+        <section id="home-screen" class="hidden space-y-6 animate-fadeIn">
+          <div class="text-center space-y-1 py-2">
+            <h1
+              class="text-3xl font-black tracking-tighter bg-clip-text text-transparent bg-gradient-to-br from-white via-slate-200 to-slate-500"
+            >
+              Poki<span class="text-rose-500">Bot</span>
+            </h1>
+            <p class="text-xs text-slate-400 font-mono">
+              ¿No tienes amigos? No hay problema,
+            </p>
+          </div>
+
+          <div class="space-y-3">
+            <button
+              onclick="openForm('buscar')"
+              class="w-full group bg-slate-850 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 p-4 rounded-xl transition-all duration-200 flex items-center justify-between text-left"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="p-2 bg-cyan-950 text-cyan-400 rounded-lg group-hover:scale-110 transition-transform"
+                >
+                  <i data-lucide="search" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold">Buscar batallas</h3>
+                  <p class="text-xs text-slate-400">
+                    Jugar activamente en el servidor
+                  </p>
+                </div>
+              </div>
+              <i
+                data-lucide="chevron-right"
+                class="w-4 h-4 text-slate-500 group-hover:text-white transition-colors"
+              ></i>
+            </button>
+
+            <button
+              onclick="openForm('aceptar')"
+              class="w-full group bg-slate-850 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 p-4 rounded-xl transition-all duration-200 flex items-center justify-between text-left"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="p-2 bg-emerald-950 text-emerald-400 rounded-lg group-hover:scale-110 transition-transform"
+                >
+                  <i data-lucide="swords" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold">Aceptar batallas</h3>
+                  <p class="text-xs text-slate-400">
+                    Esperar desafíos entrantes
+                  </p>
+                </div>
+              </div>
+              <i
+                data-lucide="chevron-right"
+                class="w-4 h-4 text-slate-500 group-hover:text-white transition-colors"
+              ></i>
+            </button>
+
+            <button
+              onclick="openForm('cross')"
+              class="w-full group bg-slate-850 hover:bg-slate-800 border border-slate-800 hover:border-slate-700 p-4 rounded-xl transition-all duration-200 flex items-center justify-between text-left"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="p-2 bg-purple-950 text-purple-400 rounded-lg group-hover:scale-110 transition-transform"
+                >
+                  <i data-lucide="git-compare" class="w-5 h-5"></i>
+                </div>
+                <div>
+                  <h3 class="text-sm font-semibold">Cross evaluate</h3>
+                  <p class="text-xs text-slate-400">
+                    Torneo todos contra todos entre agentes (solo con Localhost)
+                  </p>
+                </div>
+              </div>
+              <i
+                data-lucide="chevron-right"
+                class="w-4 h-4 text-slate-500 group-hover:text-white transition-colors"
+              ></i>
+            </button>
+          </div>
+        </section>
+
+        <section
+          id="form-standard-screen"
+          class="hidden space-y-5 animate-fadeIn"
+        >
+          <div class="flex items-center gap-3 mb-2">
+            <button
+              onclick="showScreen('home-screen')"
+              class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+            >
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <h2 id="form-standard-title" class="text-lg font-bold">
+              Configurar Batallas
+            </h2>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5"
+                >Servidor</label
+              >
+              <select
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500 appearance-none text-slate-200"
+              >
+                <option value="localhost">Localhost</option>
+                <option value="showdown">Pokémon Showdown</option>
+              </select>
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5"
+                >Número de batallas</label
+              >
+              <input
+                type="number"
+                value="5"
+                min="1"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500"
+              />
+            </div>
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5"
+                >Selección de Agente</label
+              >
+              <select
+                id="agent-select"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-rose-500 text-slate-200"
+              >
+                <option value="agent1">Agente 1 (PPO Model)</option>
+                <option value="agent2">Agente 2 (Heurístico)</option>
+              </select>
+            </div>
+            <button
+              onclick="startSimulation('standard')"
+              class="w-full bg-rose-600 hover:bg-rose-500 text-white font-medium py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 mt-4"
+            >
+              <i data-lucide="play" class="w-4 h-4 fill-current"></i> Iniciar
+              Proceso
+            </button>
+          </div>
+        </section>
+
+        <section id="form-cross-screen" class="hidden space-y-5 animate-fadeIn">
+          <div class="flex items-center gap-3 mb-2">
+            <button
+              onclick="showScreen('home-screen')"
+              class="p-2 hover:bg-slate-800 rounded-lg text-slate-400 hover:text-white transition-colors"
+            >
+              <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            </button>
+            <h2 class="text-lg font-bold">Evaluación Cruzada</h2>
+          </div>
+
+          <div class="space-y-5">
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1.5"
+                >Batallas por emparejamiento</label
+              >
+              <input
+                type="number"
+                id="cross-count"
+                value="10"
+                min="1"
+                class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-purple-500"
+              />
+            </div>
+
+            <div>
+              <label
+                class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2"
+                >Selecciona agentes para el torneo (mínimo 2)</label
+              >
+
+              <div
+                class="space-y-2 max-h-48 overflow-y-auto pr-2 scrollbar-thin"
+                id="cross-agents-list"
+              >
+                <label
+                  class="relative flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-600 transition-colors has-[:checked]:border-purple-500 has-[:checked]:bg-purple-950/30"
+                >
+                  <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-5 h-5 text-purple-400"></i>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-100">
+                        Agente 1
+                      </p>
+                      <p class="text-xs text-slate-400">
+                        Proximal Policy Optimization
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="selected-agents"
+                    value="Agente 1"
+                    class="w-5 h-5 accent-purple-500 rounded border-slate-700 bg-slate-800 current-agents-checkbox"
+                  />
+                </label>
+                <label
+                  class="relative flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-600 transition-colors has-[:checked]:border-purple-500 has-[:checked]:bg-purple-950/30"
+                >
+                  <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-5 h-5 text-purple-400"></i>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-100">
+                        Agente 2
+                      </p>
+                      <p class="text-xs text-slate-400">Rule-based Heuristic</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="selected-agents"
+                    value="Agente 2"
+                    class="w-5 h-5 accent-purple-500 rounded border-slate-700 bg-slate-800 current-agents-checkbox"
+                  />
+                </label>
+                <label
+                  class="relative flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-600 transition-colors has-[:checked]:border-purple-500 has-[:checked]:bg-purple-950/30"
+                >
+                  <div class="flex items-center gap-3">
+                    <i data-lucide="bot" class="w-5 h-5 text-purple-400"></i>
+                    <div>
+                      <p class="text-sm font-semibold text-slate-100">
+                        Agente 3
+                      </p>
+                      <p class="text-xs text-slate-400">Alpha-Beta Pruning</p>
+                    </div>
+                  </div>
+                  <input
+                    type="checkbox"
+                    name="selected-agents"
+                    value="Agente 3"
+                    class="w-5 h-5 accent-purple-500 rounded border-slate-700 bg-slate-800 current-agents-checkbox"
+                  />
+                </label>
+              </div>
+              <p
+                id="cross-error"
+                class="text-xs text-rose-400 pt-2 hidden flex items-center gap-1.5"
+              >
+                <i data-lucide="alert-triangle" class="w-4 h-4"></i> Debes
+                seleccionar al menos 2 agentes para evaluar.
+              </p>
+            </div>
+
+            <button
+              onclick="validateAndStartCross()"
+              class="w-full bg-purple-600 hover:bg-purple-500 text-white font-medium py-3 rounded-xl transition-colors text-sm flex items-center justify-center gap-2 mt-2"
+            >
+              <i data-lucide="git-compare" class="w-4 h-4"></i> Ejecutar Torneo
+              Round-Robin
+            </button>
+          </div>
+        </section>
+
+        <section id="execution-screen" class="hidden space-y-5 animate-fadeIn">
+          <div class="text-center space-y-1">
+            <h2
+              id="execution-status"
+              class="text-lg font-bold text-slate-200 flex items-center justify-center gap-2"
+            >
+              <span
+                class="inline-block w-2 h-2 rounded-full bg-amber-500 animate-ping"
+              ></span>
+              <span id="status-text">Ejecutando...</span>
+            </h2>
+            <p class="text-xs text-slate-400 font-mono" id="execution-subtitle">
+              Procesando...
+            </p>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="flex justify-between text-xs font-mono text-slate-400">
+              <span>Progreso</span>
+              <span id="progress-percentage" class="text-rose-400 font-bold"
+                >0%</span
+              >
+            </div>
+            <div
+              class="w-full bg-slate-950 rounded-full h-2.5 overflow-hidden border border-slate-850"
+            >
+              <div
+                id="progress-bar"
+                class="bg-gradient-to-r from-rose-500 to-purple-600 h-full w-0 transition-all duration-300"
+              ></div>
+            </div>
+          </div>
+
+          <div
+            class="border border-slate-800 rounded-xl overflow-hidden bg-slate-950"
+          >
+            <button
+              onclick="toggleLogs()"
+              class="w-full px-4 py-3 bg-slate-900/50 hover:bg-slate-900 transition-colors flex justify-between items-center text-xs font-semibold text-slate-400 uppercase tracking-wider"
+            >
+              <span class="flex items-center gap-2"
+                ><i data-lucide="terminal" class="w-4 h-4 text-slate-500"></i>
+                Logs de batalla</span
+              >
+              <i
+                id="logs-chevron"
+                data-lucide="chevron-down"
+                class="w-4 h-4 transition-transform"
+              ></i>
+            </button>
+            <div
+              id="logs-container"
+              class="hidden h-40 overflow-y-auto p-4 font-mono text-xs text-slate-300 space-y-1 bg-black border-t border-slate-900 scrollbar-thin"
+            ></div>
+          </div>
+
+          <div
+            id="results-panel"
+            class="hidden space-y-4 pt-2 border-t border-slate-800 animate-fadeIn"
+          >
+            <div id="results-content"></div>
+
+            <button
+              onclick="showScreen('home-screen')"
+              class="w-full bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 font-medium py-2.5 rounded-xl transition-colors text-sm flex items-center justify-center gap-2"
+            >
+              <i data-lucide="home" class="w-4 h-4"></i> Volver al Inicio
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script>
+      lucide.createIcons()
+      let configSaved = false
+      let currentMode = "standard" // 'standard' o 'cross'
+      let pollingInterval = null
+
+      function startPolling() {
+        if (pollingInterval) return
+        pollingInterval = setInterval(async () => {
+          if (!api()) return
+          try {
+            // Drain buffered logs
+            const logs = await api().poll_logs()
+            if (logs && logs.length) {
+              logs.forEach((msg) => push_log(msg))
+            }
+            // Check progress
+            const prog = await api().poll_progress()
+            if (prog && (prog.pct > 0 || prog.status)) {
+              updateProgress(prog.pct, prog.status)
+            }
+            // Check results (one-shot)
+            const result = await api().poll_result()
+            if (result) {
+              showResults(result.mode, result.data)
+            }
+          } catch (e) {
+            // polling errors are expected if bridge not ready; ignore
+          }
+        }, 300)
+      }
+
+      function stopPolling() {
+        if (pollingInterval) {
+          clearInterval(pollingInterval)
+          pollingInterval = null
+        }
+      }
+
+      function showScreen(screenId) {
+        // Stop polling when leaving execution screen
+        if (
+          !document
+            .getElementById("execution-screen")
+            .classList.contains("hidden")
+        ) {
+          stopPolling()
+        }
+        const screens = [
+          "setup-screen",
+          "home-screen",
+          "form-standard-screen",
+          "form-cross-screen",
+          "execution-screen",
+        ]
+        screens.forEach((id) =>
+          document.getElementById(id).classList.add("hidden"),
+        )
+        document.getElementById(screenId).classList.remove("hidden")
+        if (configSaved)
+          document
+            .getElementById("btn-global-config")
+            .classList.remove("hidden")
+      }
+
+      async function saveInitialConfig() {
+        const user = document.getElementById("showdown-user").value.trim()
+        const pass = document.getElementById("showdown-pass").value.trim()
+        if (!user || !pass) {
+          alert("Rellena las credenciales.")
+          return
+        }
+        if (api()) {
+          const ok = await api().save_config(user, pass)
+          if (!ok) {
+            alert("Error al guardar credenciales.")
+            return
+          }
+        }
+        configSaved = true
+        showScreen("home-screen")
+        document.getElementById("btn-global-config").classList.remove("hidden")
+      }
+
+      async function openForm(type) {
+        currentMode = type
+        if (type === "cross") {
+          document
+            .querySelectorAll(".current-agents-checkbox")
+            .forEach((c) => (c.checked = false))
+          document.getElementById("cross-error").classList.add("hidden")
+          showScreen("form-cross-screen")
+          if (api()) {
+            const agents = await api().discover_agents()
+            const container = document.getElementById("cross-agents-list")
+            container.innerHTML = agents
+              .map(
+                (a, i) => `
+              <label class="relative flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-600 transition-colors has-[:checked]:border-purple-500 has-[:checked]:bg-purple-950/30">
+                <div class="flex items-center gap-3">
+                  <i data-lucide="bot" class="w-5 h-5 text-purple-400"></i>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-100">${a.name}</p>
+                    <p class="text-xs text-slate-400">${a.class_name}</p>
+                  </div>
+                </div>
+                <input type="checkbox" name="selected-agents" value="${a.name}" class="w-5 h-5 accent-purple-500 rounded border-slate-700 bg-slate-800 current-agents-checkbox" />
+              </label>
+            `,
+              )
+              .join("")
+            lucide.createIcons()
+          }
+        } else {
+          document.getElementById("form-standard-title").innerText =
+            type === "buscar" ? "Buscar Batallas" : "Aceptar Batallas"
+          showScreen("form-standard-screen")
+          if (api()) {
+            const agents = await api().discover_agents()
+            const select = document.getElementById("agent-select")
+            if (select) {
+              select.innerHTML = agents
+                .map((a) => `<option value="${a.name}">${a.name}</option>`)
+                .join("")
+            }
+          }
+        }
+      }
+
+      function toggleLogs() {
+        const container = document.getElementById("logs-container")
+        const chevron = document.getElementById("logs-chevron")
+        const isHidden = container.classList.toggle("hidden")
+        chevron.style.transform = isHidden ? "rotate(0deg)" : "rotate(180deg)"
+      }
+
+      // Validación específica para Cross Evaluate
+      function validateAndStartCross() {
+        const checkedAgents = document.querySelectorAll(
+          'input[name="selected-agents"]:checked',
+        )
+        if (checkedAgents.length < 2) {
+          document.getElementById("cross-error").classList.remove("hidden")
+          return
+        }
+        document.getElementById("cross-error").classList.add("hidden")
+        startSimulation("cross")
+      }
+
+      // Inicialización de UI para pantalla de ejecución (usado por ambos modos)
+      function resetExecutionUI(mode) {
+        document.getElementById("status-text").innerText =
+          mode === "cross" ? "Ejecutando Torneo..." : "Ejecutando Batallas..."
+        document
+          .getElementById("status-text")
+          .parentElement.classList.remove("text-emerald-400")
+        const pingEl =
+          document.getElementById("status-text").previousElementSibling
+        pingEl.classList.add("bg-amber-500", "animate-ping")
+        pingEl.innerHTML = ""
+        document.getElementById("execution-subtitle").innerText =
+          mode === "cross"
+            ? "Emparejando todos contra todos..."
+            : "Conectando a servidor..."
+        document.getElementById("results-panel").classList.add("hidden")
+        document.getElementById("progress-bar").style.width = "0%"
+        document.getElementById("progress-percentage").innerText = "0%"
+        const logs = document.getElementById("logs-container")
+        logs.innerHTML = ""
+        if (logs.classList.contains("hidden")) toggleLogs()
+      }
+
+      // Lógica de simulación unificada — bridge real
+      async function startSimulation(mode) {
+        showScreen("execution-screen")
+        resetExecutionUI(mode)
+        startPolling()
+
+        if (!api()) {
+          simulateLocally(mode)
+          return
+        }
+
+        try {
+          if (mode === "cross") {
+            const agents = Array.from(
+              document.querySelectorAll(
+                'input[name="selected-agents"]:checked',
+              ),
+            ).map((el) => el.value)
+            const n_battles = document.getElementById("cross-count").value || 10
+            await api().cross_evaluate({
+              agents,
+              n_battles: parseInt(n_battles),
+            })
+          } else if (currentMode === "buscar") {
+            const server =
+              document.querySelector("#form-standard-screen select")?.value ||
+              "localhost"
+            const agent =
+              document.getElementById("agent-select")?.value || "RandomPlayer"
+            const n_games =
+              document.querySelector(
+                '#form-standard-screen input[type="number"]',
+              )?.value || 5
+            await api().search_battles({
+              server,
+              agent,
+              n_games: parseInt(n_games),
+            })
+          } else {
+            const server =
+              document.querySelector("#form-standard-screen select")?.value ||
+              "localhost"
+            const agent =
+              document.getElementById("agent-select")?.value || "RandomPlayer"
+            const n_games =
+              document.querySelector(
+                '#form-standard-screen input[type="number"]',
+              )?.value || 5
+            await api().accept_battles({
+              server,
+              agent,
+              n_games: parseInt(n_games),
+            })
+          }
+        } catch (e) {
+          console.error("Bridge error:", e)
+          push_log(`Error: ${e.message}`)
+        }
+      }
+
+      // Fallback simulado cuando no hay bridge PyWebView
+      function simulateLocally(mode) {
+        let progress = 0
+        const logPool =
+          mode === "cross"
+            ? [
+                "Iniciando Torneo Round-Robin...",
+                "Setup: Agente 1 vs Agente 2...",
+                "Agente 1 gana (2-1).",
+                "Setup: Agente 2 vs Agente 3...",
+                "Agente 3 gana (3-0).",
+                "Setup: Agente 1 vs Agente 3...",
+                "Empate técnico en batalla 4...",
+                "Finalizando emparejamientos...",
+                "Calculando tabla de posiciones...",
+              ]
+            : [
+                "Conectando...",
+                "Match encontrado.",
+                "Team Preview...",
+                "Turno 1...",
+                "Agente usa Stealth Rock.",
+                "Turno 10...",
+                "Victoria para el Agente.",
+                "Guardando replay...",
+                "Cerrando conexión.",
+              ]
+
+        const interval = setInterval(() => {
+          progress += Math.floor(Math.random() * 15) + 5
+          if (progress > 100) progress = 100
+          document.getElementById("progress-bar").style.width = `${progress}%`
+          document.getElementById("progress-percentage").innerText =
+            `${progress}%`
+
+          if (Math.random() > 0.3 && logPool.length > 0) {
+            const p = document.createElement("p")
+            p.className =
+              "text-[11px] border-l-2 border-slate-800 pl-2 text-slate-400"
+            p.innerHTML = `<span class="text-slate-600">[${new Date().toLocaleTimeString()}]</span> ${logPool.shift()}`
+            document.getElementById("logs-container").appendChild(p)
+            document.getElementById("logs-container").scrollTop =
+              document.getElementById("logs-container").scrollHeight
+          }
+
+          if (progress === 100) {
+            clearInterval(interval)
+            showFinalResults(mode)
+          }
+        }, 350)
+      }
+
+      function showFinalResults(mode) {
+        // Update Header Status to Success
+        const statusHeader = document.getElementById("execution-status")
+        statusHeader.classList.add("text-emerald-400")
+        statusHeader.children[0].classList.remove(
+          "bg-amber-500",
+          "animate-ping",
+        )
+        statusHeader.children[0].innerHTML =
+          '<i data-lucide="check-circle" class="w-5 h-5"></i>'
+        document.getElementById("status-text").innerText =
+          "Simulación Completada"
+        document.getElementById("execution-subtitle").innerText =
+          "Proceso finalizado correctamente."
+
+        const content = document.getElementById("results-content")
+        content.innerHTML = ""
+
+        if (mode === "standard") {
+          const wins = Math.floor(Math.random() * 5) + 1
+          const total = 5
+          content.innerHTML = `
+                    <div class="p-4 bg-slate-850/50 border border-emerald-500/20 rounded-xl space-y-3">
+                        <div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+                            <i data-lucide="trophy" class="w-4 h-4"></i> Resumen de Batallas
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-850"><p class="text-xs text-slate-500">W</p><p class="text-lg font-bold text-emerald-400">${wins}</p></div>
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-850"><p class="text-xs text-slate-500">L</p><p class="text-lg font-bold text-rose-500">${total - wins}</p></div>
+                            <div class="bg-slate-950 p-2 rounded-lg border border-slate-850"><p class="text-xs text-slate-500">WR</p><p class="text-lg font-bold text-cyan-400">${((wins / total) * 100).toFixed(0)}%</p></div>
+                        </div>
+                    </div>`
+        } else {
+          const selectedNames = Array.from(
+            document.querySelectorAll('input[name="selected-agents"]:checked'),
+          ).map((el) => el.value)
+
+          let tableRows = ""
+          selectedNames.forEach((name, index) => {
+            const points =
+              (selectedNames.length - index) * 3 + Math.floor(Math.random() * 2)
+            const wr = (100 - index * 15 - Math.random() * 10).toFixed(0)
+            tableRows += `
+                        <tr class="border-b border-slate-800 text-xs ${index === 0 ? "text-emerald-300 font-medium" : "text-slate-300"}">
+                            <td class="py-2 px-1 text-slate-500">#${index + 1}</td>
+                            <td class="py-2">${name}</td>
+                            <td class="py-2 text-center">${points}</td>
+                            <td class="py-2 text-center text-cyan-400">${wr}%</td>
+                        </tr>`
+          })
+
+          content.innerHTML = `
+                    <div class="p-4 bg-slate-850/50 border border-purple-500/20 rounded-xl space-y-3">
+                        <div class="flex items-center gap-2 text-purple-400 font-semibold text-sm">
+                            <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Clasificación Final Torneo
+                        </div>
+                        <table class="w-full font-mono">
+                            <thead>
+                                <tr class="text-left text-[10px] text-slate-500 uppercase tracking-wider border-b border-slate-700">
+                                    <th class="pb-1 w-8">Pos</th>
+                                    <th class="pb-1">Agente</th>
+                                    <th class="pb-1 text-center">Pts</th>
+                                    <th class="pb-1 text-center">WR</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${tableRows}
+                            </tbody>
+                        </table>
+                    </div>`
+        }
+
+        lucide.createIcons()
+        document.getElementById("results-panel").classList.remove("hidden")
+      }
+
+      // Called from Python bridge via evaluate_js
+      function push_log(msg) {
+        const logs = document.getElementById("logs-container")
+        const p = document.createElement("p")
+        p.className =
+          "text-[11px] border-l-2 border-slate-800 pl-2 text-slate-400"
+        p.innerHTML = `<span class="text-slate-600">[${new Date().toLocaleTimeString()}]</span> ${msg}`
+        logs.appendChild(p)
+        logs.scrollTop = logs.scrollHeight
+      }
+
+      function updateProgress(pct, status) {
+        document.getElementById("progress-bar").style.width = `${pct}%`
+        document.getElementById("progress-percentage").innerText = `${pct}%`
+        if (status) {
+          document.getElementById("execution-subtitle").innerText = status
+        }
+      }
+
+      function showResults(mode, data) {
+        const statusHeader = document.getElementById("execution-status")
+        statusHeader.classList.add("text-emerald-400")
+        const ping = statusHeader.querySelector(".animate-ping")
+        if (ping) {
+          ping.classList.remove("bg-amber-500", "animate-ping")
+          ping.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5"></i>'
+        }
+        document.getElementById("status-text").innerText =
+          "Simulación Completada"
+        document.getElementById("execution-subtitle").innerText =
+          "Proceso finalizado correctamente."
+        updateProgress(100, "Completado")
+
+        const content = document.getElementById("results-content")
+        content.innerHTML = ""
+
+        if (mode === "standard") {
+          content.innerHTML = `
+            <div class="p-4 bg-slate-850/50 border border-emerald-500/20 rounded-xl space-y-3">
+              <div class="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
+                <i data-lucide="trophy" class="w-4 h-4"></i> Resumen de Batallas
+              </div>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div class="bg-slate-950 p-2 rounded-lg border border-slate-850"><p class="text-xs text-slate-500">W</p><p class="text-lg font-bold text-emerald-400">${data.wins}</p></div>
+                <div class="bg-slate-950 p-2 rounded-lg border border-slate-850"><p class="text-xs text-slate-500">L</p><p class="text-lg font-bold text-rose-500">${data.losses}</p></div>
+                <div class="bg-slate-950 p-2 rounded-lg border border-slate-850"><p class="text-xs text-slate-500">WR</p><p class="text-lg font-bold text-cyan-400">${data.wr}%</p></div>
+              </div>
+            </div>`
+        } else if (mode === "cross") {
+          let tableRows = data
+            .map(
+              (row, i) => `
+            <tr class="border-b border-slate-800 text-xs ${i === 0 ? "text-emerald-300 font-medium" : "text-slate-300"}">
+              <td class="py-2 px-1 text-slate-500">#${row.pos}</td>
+              <td class="py-2">${row.name}</td>
+              <td class="py-2 text-center">${row.pts}</td>
+              <td class="py-2 text-center text-cyan-400">${row.wr}%</td>
+            </tr>`,
+            )
+            .join("")
+
+          content.innerHTML = `
+            <div class="p-4 bg-slate-850/50 border border-purple-500/20 rounded-xl space-y-3">
+              <div class="flex items-center gap-2 text-purple-400 font-semibold text-sm">
+                <i data-lucide="bar-chart-3" class="w-4 h-4"></i> Clasificación Final Torneo
+              </div>
+              <table class="w-full font-mono">
+                <thead>
+                  <tr class="text-left text-[10px] text-slate-500 uppercase tracking-wider border-b border-slate-700">
+                    <th class="pb-1 w-8">Pos</th>
+                    <th class="pb-1">Agente</th>
+                    <th class="pb-1 text-center">Pts</th>
+                    <th class="pb-1 text-center">WR</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${tableRows}
+                </tbody>
+              </table>
+            </div>`
+        }
+
+        lucide.createIcons()
+        document.getElementById("results-panel").classList.remove("hidden")
+      }
+
+      // Auto-detect config al cargar la página — salta setup si ya hay credenciales
+      ;(async function () {
+        if (api()) {
+          try {
+            const has = await api().has_config()
+            if (has) {
+              configSaved = true
+              showScreen("home-screen")
+            }
+          } catch (e) {
+            // Bridge no disponible aún; se muestra setup por defecto
+          }
+        }
+      })()
+    </script>
+  </body>
+</html>

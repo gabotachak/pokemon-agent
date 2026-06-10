@@ -20,4 +20,5 @@ dependencies = [
     "uvicorn>=0.47.0",
     "websockets>=16.0",
     "xgboost>=3.2.0",
+    "pywebview>=4",
 ]
